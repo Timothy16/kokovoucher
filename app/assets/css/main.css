@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f8f7f4;
+  --surface: #ffffff;
+  --primary: #2f7d6b;
+  --primary-hover: #276657;
+  --primary-soft: #e9f3ef;
+  --success: #2e9e6b;
+  --success-soft: #e6f6ee;
+  --error: #d64545;
+  --error-soft: #fbeaea;
+  --warning: #e0a43b;
+  --warning-soft: #fdf3e2;
+  --ink: #1a1a1a;
+  --muted: #6b6b6b;
+  --border: #e7e4dd;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#__nuxt {
+  height: 100%;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-feature-settings: 'cv11';
+}
+
+::selection {
+  background: var(--primary-soft);
+  color: var(--primary-hover);
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--border) 25%, #f2f0ea 37%, var(--border) 63%);
+  background-size: 800px 100%;
+}
+
+/* page transition */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
