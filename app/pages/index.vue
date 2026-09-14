@@ -48,23 +48,7 @@ const trust = [
           </div>
         </div>
 
-        <div class="animate-pop-in [animation-delay:150ms]">
-          <div class="mx-auto max-w-xs rounded-card border border-border bg-surface p-6 shadow-lift">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-semibold uppercase tracking-wide text-muted">Voucher</span>
-              <BaseBadge tone="primary" pulse>Active</BaseBadge>
-            </div>
-            <p class="mt-3 text-3xl font-extrabold text-ink">₦5,000</p>
-            <p class="text-sm text-muted">Mama Put Kitchen</p>
-            <div class="mt-5 flex items-center justify-center rounded-control border border-border bg-white p-4">
-              <div class="grid grid-cols-5 gap-1">
-                <span v-for="i in 25" :key="i" class="size-3 rounded-[2px]" :class="Math.random() > 0.42 ? 'bg-ink' : 'bg-transparent'" />
-              </div>
-            </div>
-            <p class="mt-4 text-center font-mono text-lg font-bold tracking-[0.3em] text-ink">AF7K 9QX2</p>
-            <p class="mt-1 text-center text-xs text-muted">Expires today at 23:59</p>
-          </div>
-        </div>
+        <VoucherCard class="[animation-delay:150ms]" />
       </div>
     </section>
 
