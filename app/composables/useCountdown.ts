@@ -1,6 +1,6 @@
 export function useCountdown(targetISO: Ref<string> | string) {
   const now = ref(Date.now())
-  let timer: ReturnType<typeof window.setInterval> | undefined
+  let timer: number | undefined
 
   onMounted(() => {
     timer = window.setInterval(() => {

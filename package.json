@@ -20,7 +20,8 @@
   },
   "devDependencies": {
     "@iconify-json/lucide": "^1.2.132",
-    "typescript": "^5.7.3",
+    "@types/qrcode": "^1.5.6",
+    "typescript": "^5.9.3",
     "vue-tsc": "^3.3.11"
   }
 }

@@ -1,13 +1,13 @@
 <script setup lang="ts">
 const { toasts, dismiss } = useToast()
 
-const icon: Record<string, string> = {
+const icon: Record<ToastType, string> = {
   success: 'lucide:circle-check',
   error: 'lucide:circle-x',
   warning: 'lucide:triangle-alert',
   info: 'lucide:info'
 }
-const tone: Record<string, string> = {
+const tone: Record<ToastType, string> = {
   success: 'text-success',
   error: 'text-error',
   warning: 'text-warning',

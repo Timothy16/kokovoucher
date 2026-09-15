@@ -45,7 +45,7 @@ const totalsByCurrency = computed(() => {
       </ul>
       <div class="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 border-t border-border bg-black/[0.02] px-5 py-3 text-sm font-semibold text-ink">
         <span class="text-xs font-normal text-muted">Total redeemed:</span>
-        <span v-for="(amount, currency) in totalsByCurrency" :key="currency">{{ formatCurrency(amount, currency) }}</span>
+        <span v-for="(amount, currency) in totalsByCurrency" :key="currency">{{ formatCurrency(amount!, currency) }}</span>
       </div>
     </BaseCard>
   </div>
