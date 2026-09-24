@@ -1,7 +1,11 @@
 <!-- app/components/ui/BaseToggle.vue -->
 <script setup lang="ts">
-defineProps<{ modelValue: boolean; label: string; hint?: string }>()
-defineEmits<{ 'update:modelValue': [value: boolean] }>()
+const props = defineProps<{ modelValue: boolean; label: string; hint?: string }>()
+const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
+
+function onChange(e: Event) {
+  emit('update:modelValue', (e.target as HTMLInputElement).checked)
+}
 </script>
 
 <template>
@@ -10,15 +14,11 @@ defineEmits<{ 'update:modelValue': [value: boolean] }>()
       <span class="block text-sm font-medium text-ink">{{ label }}</span>
       <span v-if="hint" class="mt-0.5 block text-xs text-muted">{{ hint }}</span>
     </span>
-    <button
-      type="button"
-      role="switch"
-      :aria-checked="modelValue"
-      class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors"
-      :class="modelValue ? 'bg-primary' : 'bg-black/15'"
-      @click="$emit('update:modelValue', !modelValue)"
-    >
-      <span class="inline-block size-4.5 transform rounded-full bg-white shadow-sm transition-transform" :class="modelValue ? 'translate-x-6' : 'translate-x-1'" />
-    </button>
+    <span class="relative inline-flex shrink-0">
+      <input type="checkbox" class="peer sr-only" :checked="modelValue" @change="onChange" />
+      <span
+        class="h-6 w-11 rounded-full bg-black/15 transition-colors after:absolute after:left-0.5 after:top-0.5 after:size-5 after:rounded-full after:bg-white after:shadow-sm after:transition-transform after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-focus-visible:ring-4 peer-focus-visible:ring-primary/25"
+      />
+    </span>
   </label>
 </template>
