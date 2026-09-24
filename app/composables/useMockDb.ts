@@ -166,6 +166,7 @@ interface Settings {
 }
 
 interface Db {
+  schemaVersion: number
   admin: { id: string; name: string; email: string; password: string }
   settings: Settings
   restaurants: Restaurant[]
@@ -181,6 +182,11 @@ interface Db {
 }
 
 const STORAGE_KEY = 'kokovoucher-db-v2'
+// Bump this whenever a field is added/removed/renamed on any interface above.
+// loadDb() discards any cached browser data that doesn't match, instead of trying
+// to run the app against a stale shape (that's what silently broke ComboCard etc.
+// when sodaOptions/waterOption/spiceOption were added without a version bump).
+const SCHEMA_VERSION = 3
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 const VERIFY_MAX_ATTEMPTS = 5
 
@@ -453,6 +459,7 @@ function seedDb(): Db {
   pushAudit({ actor: 'admin', action: 'restaurant.create', targetType: 'restaurant', targetId: 'rst_03', note: 'Invited The Yellow Chilli', at: daysAgoISO(2) })
 
   return {
+    schemaVersion: SCHEMA_VERSION,
     admin: { id: 'adm_01', name: 'Admin User', email: 'admin@kokovoucher.app', password: 'admin123' },
     settings: { adminEmail: 'admin@kokovoucher.app', voucherValidityDays: validityDays },
     restaurants,
@@ -472,7 +479,12 @@ function loadDb(): Db {
   if (import.meta.client) {
     try {
       const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) return JSON.parse(raw) as Db
+      if (raw) {
+        const parsed = JSON.parse(raw) as Db
+        if (parsed.schemaVersion === SCHEMA_VERSION) return parsed
+        // Stale shape from an earlier build — don't run the app against data
+        // that's missing fields the current code assumes exist. Fresh seed instead.
+      }
     } catch {
       // fall through to fresh seed
     }
