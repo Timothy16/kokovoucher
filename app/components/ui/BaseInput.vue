@@ -1,3 +1,4 @@
+<!-- app/components/ui/BaseInput.vue -->
 <script setup lang="ts">
 defineOptions({ inheritAttrs: false })
 const props = withDefaults(

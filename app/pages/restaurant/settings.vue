@@ -1,26 +1,15 @@
+<!-- app/pages/restaurant/settings.vue -->
 <script setup lang="ts">
 definePageMeta({ layout: 'restaurant', middleware: 'restaurant-auth' })
 
 const { db, currentRestaurant } = useMockDb()
 const toast = useToast()
 
-const name = ref(currentRestaurant.value?.name ?? '')
 const currentPassword = ref('')
 const newPassword = ref('')
 const confirmPassword = ref('')
 const errors = reactive<Record<string, string>>({})
-const savingName = ref(false)
 const savingPassword = ref(false)
-
-async function saveName() {
-  if (!currentRestaurant.value || !name.value.trim()) return
-  savingName.value = true
-  await new Promise((r) => setTimeout(r, 400))
-  const r = db.value.restaurants.find((x) => x.id === currentRestaurant.value!.id)
-  if (r) r.name = name.value.trim()
-  savingName.value = false
-  toast.success('Restaurant name updated')
-}
 
 async function savePassword() {
   Object.keys(errors).forEach((k) => delete errors[k])
@@ -46,15 +35,20 @@ async function savePassword() {
   <div class="mx-auto max-w-lg space-y-6">
     <div>
       <h1 class="text-2xl font-extrabold tracking-tight text-ink">Profile &amp; settings</h1>
-      <p class="text-sm text-muted">Manage your restaurant's details.</p>
+      <p class="text-sm text-muted">Your restaurant profile is managed by KokoVoucher admin.</p>
     </div>
 
     <BaseCard class="animate-fade-up">
-      <p class="mb-4 font-bold text-ink">Restaurant name</p>
-      <form class="flex flex-col gap-4 sm:flex-row sm:items-end" @submit.prevent="saveName">
-        <div class="flex-1"><BaseInput v-model="name" label="Name" icon="lucide:store" required /></div>
-        <BaseButton type="submit" :loading="savingName">Save</BaseButton>
-      </form>
+      <p class="mb-4 font-bold text-ink">Restaurant profile</p>
+      <dl class="space-y-3 text-sm">
+        <div class="flex justify-between"><dt class="text-muted">Name</dt><dd class="font-semibold text-ink">{{ currentRestaurant?.name }}</dd></div>
+        <div class="flex justify-between"><dt class="text-muted">Address</dt><dd class="max-w-[65%] text-right font-semibold text-ink">{{ currentRestaurant?.address }}</dd></div>
+        <div class="flex justify-between"><dt class="text-muted">Contact person</dt><dd class="font-semibold text-ink">{{ currentRestaurant?.contactPerson }}</dd></div>
+        <div class="flex justify-between"><dt class="text-muted">Contact number</dt><dd class="font-semibold text-ink">{{ currentRestaurant?.contactNumber }}</dd></div>
+        <div class="flex justify-between"><dt class="text-muted">Login email</dt><dd class="font-semibold text-ink">{{ currentRestaurant?.contactEmail }}</dd></div>
+        <div class="flex justify-between"><dt class="text-muted">Currency</dt><dd class="font-semibold text-ink">{{ currentRestaurant?.currency }}</dd></div>
+      </dl>
+      <p class="mt-4 text-xs text-muted">Need to change any of this? Contact KokoVoucher admin.</p>
     </BaseCard>
 
     <BaseCard class="animate-fade-up">

@@ -1,3 +1,4 @@
+// app/plugins/reveal.client.ts
 export default defineNuxtPlugin((nuxtApp) => {
   nuxtApp.vueApp.directive('reveal', {
     mounted(el: HTMLElement) {

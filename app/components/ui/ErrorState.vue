@@ -1,3 +1,4 @@
+<!-- app/components/ui/ErrorState.vue -->
 <script setup lang="ts">
 withDefaults(
   defineProps<{

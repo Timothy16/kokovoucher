@@ -1,3 +1,4 @@
+<!-- app/layouts/default.vue -->
 <template>
   <div class="flex min-h-screen flex-col">
     <AppNavbar />

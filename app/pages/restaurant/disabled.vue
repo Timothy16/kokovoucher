@@ -1,3 +1,4 @@
+<!-- app/pages/restaurant/disabled.vue -->
 <script setup lang="ts">
 definePageMeta({ layout: 'customer' })
 
@@ -6,7 +7,7 @@ const { session, currentRestaurant, logout } = useMockDb()
 
 watchEffect(() => {
   if (session.value.role !== 'restaurant') router.replace('/restaurant/login')
-  else if (currentRestaurant.value?.status === 'approved') router.replace('/restaurant/redeem')
+  else if (currentRestaurant.value?.status === 'active') router.replace('/restaurant')
 })
 
 function backToLogin() {
@@ -17,13 +18,13 @@ function backToLogin() {
 
 <template>
   <BaseCard class="animate-pop-in text-center">
-    <div class="mx-auto flex size-16 items-center justify-center rounded-full bg-warning-soft">
-      <Icon name="lucide:hourglass" class="size-7 text-warning animate-pulse-soft" />
+    <div class="mx-auto flex size-16 items-center justify-center rounded-full bg-error-soft">
+      <Icon name="lucide:ban" class="size-7 text-error" />
     </div>
-    <h1 class="mt-5 text-xl font-bold text-ink">Waiting on approval</h1>
+    <h1 class="mt-5 text-xl font-bold text-ink">Account disabled</h1>
     <p class="mt-2 text-sm text-muted">
-      Thanks for registering{{ currentRestaurant ? `, ${currentRestaurant.name}` : '' }}! An admin needs to approve your
-      account before you can redeem vouchers. This usually takes less than a day.
+      {{ currentRestaurant?.name ?? 'This account' }} has been disabled by KokoVoucher admin and can't log in or receive orders right now.
+      Contact support if you think this is a mistake.
     </p>
     <BaseButton class="mt-6" variant="secondary" @click="backToLogin">Back to login</BaseButton>
   </BaseCard>

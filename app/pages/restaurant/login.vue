@@ -1,3 +1,4 @@
+<!-- app/pages/restaurant/login.vue -->
 <script setup lang="ts">
 definePageMeta({ layout: 'customer' })
 
@@ -21,16 +22,16 @@ async function submit() {
     error.value = 'Incorrect email or password.'
     return
   }
-  if (res.reason === 'REJECTED') {
-    error.value = 'This account was not approved. Contact KokoVoucher support.'
+  if (res.reason === 'NOT_ACTIVATED') {
+    error.value = "This account hasn't accepted its invite yet. Check your email for the invite link."
     return
   }
-  if (res.reason === 'PENDING') {
-    router.push('/restaurant/pending')
+  if (res.reason === 'DISABLED') {
+    router.push('/restaurant/disabled')
     return
   }
   toast.success('Welcome back', `Signed in as ${res.restaurant?.name}.`)
-  router.push('/restaurant/redeem')
+  router.push('/restaurant')
 }
 </script>
 
@@ -41,7 +42,7 @@ async function submit() {
         <Icon name="lucide:store" class="size-6 text-primary" />
       </div>
       <h1 class="mt-4 text-xl font-bold text-ink">Restaurant login</h1>
-      <p class="mt-1.5 text-sm text-muted">Verify and redeem vouchers from your customers.</p>
+      <p class="mt-1.5 text-sm text-muted">Manage orders, walk-ins, and your wallet.</p>
     </div>
 
     <form class="mt-6 space-y-4" @submit.prevent="submit">
@@ -51,12 +52,11 @@ async function submit() {
     </form>
 
     <p class="mt-5 rounded-control bg-black/5 px-3.5 py-2.5 text-center text-xs text-muted">
-      Demo — hello@mamaput.ng / restaurant123 (approved) · info@yellowchilli.ng / restaurant123 (pending)
+      Demo — hello@mamaput.ng / restaurant123 (active) · info@yellowchilli.ng (invited, not yet activated)
     </p>
 
     <p class="mt-5 text-center text-sm text-muted">
-      New restaurant?
-      <NuxtLink to="/restaurant/register" class="font-semibold text-primary">Register</NuxtLink>
+      New restaurant? Ask KokoVoucher admin to add you — you'll get an invite link by email.
     </p>
   </BaseCard>
 </template>

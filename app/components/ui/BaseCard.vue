@@ -1,3 +1,4 @@
+<!-- app/components/ui/BaseCard.vue -->
 <script setup lang="ts">
 withDefaults(defineProps<{ padded?: boolean; hover?: boolean }>(), { padded: true, hover: false })
 </script>

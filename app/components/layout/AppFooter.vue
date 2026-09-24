@@ -1,3 +1,4 @@
+<!-- app/components/layout/AppFooter.vue -->
 <script setup lang="ts">
 const year = new Date().getFullYear()
 </script>
@@ -18,9 +19,16 @@ const year = new Date().getFullYear()
         <div class="flex flex-wrap gap-x-10 gap-y-4">
           <div class="flex flex-col gap-2 text-sm">
             <span class="font-semibold text-ink">Company</span>
-            <a href="#" class="text-muted hover:text-ink">Privacy</a>
-            <a href="#" class="text-muted hover:text-ink">Terms</a>
-            <a href="#" class="text-muted hover:text-ink">Contact</a>
+            <NuxtLink to="/how-it-works" class="text-muted hover:text-ink">How it works</NuxtLink>
+            <NuxtLink to="/faq" class="text-muted hover:text-ink">FAQ</NuxtLink>
+            <NuxtLink to="/privacy" class="text-muted hover:text-ink">Privacy</NuxtLink>
+            <NuxtLink to="/terms" class="text-muted hover:text-ink">Terms</NuxtLink>
+            <NuxtLink to="/contact" class="text-muted hover:text-ink">Contact</NuxtLink>
+          </div>
+          <div class="flex flex-col gap-2 text-sm">
+            <span class="font-semibold text-ink">Customers</span>
+            <NuxtLink to="/menu" class="text-muted hover:text-ink">Browse menu</NuxtLink>
+            <NuxtLink to="/track" class="text-muted hover:text-ink">Track an order</NuxtLink>
           </div>
           <div class="flex flex-col gap-2 text-sm">
             <span class="font-semibold text-ink">Team access</span>

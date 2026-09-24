@@ -1,3 +1,4 @@
+<!-- app/components/restaurant/QrScanner.vue -->
 <script setup lang="ts">
 const emit = defineEmits<{ decode: [value: string]; close: [] }>()
 

@@ -1,3 +1,4 @@
+<!-- app/components/ui/Avatar.vue -->
 <script setup lang="ts">
 const props = withDefaults(defineProps<{ seed: string; size?: number }>(), { size: 40 })
 const errored = ref(false)

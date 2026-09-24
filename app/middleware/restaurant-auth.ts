@@ -1,12 +1,13 @@
+// app/middleware/restaurant-auth.ts
 export default defineNuxtRouteMiddleware((to) => {
-  const open = ['/restaurant/register', '/restaurant/login', '/restaurant/pending']
-  if (open.includes(to.path)) return
+  const openPrefixes = ['/restaurant/login', '/restaurant/invite', '/restaurant/disabled']
+  if (openPrefixes.some((p) => to.path === p || to.path.startsWith(`${p}/`))) return
 
   const { session, currentRestaurant } = useMockDb()
   if (session.value.role !== 'restaurant' || !currentRestaurant.value) {
     return navigateTo('/restaurant/login')
   }
-  if (currentRestaurant.value.status !== 'approved') {
-    return navigateTo('/restaurant/pending')
+  if (currentRestaurant.value.status === 'disabled') {
+    return navigateTo('/restaurant/disabled')
   }
 })

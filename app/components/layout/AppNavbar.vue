@@ -1,3 +1,4 @@
+<!-- app/components/layout/AppNavbar.vue -->
 <script setup lang="ts">
 const mobileOpen = ref(false)
 </script>
@@ -20,7 +21,7 @@ const mobileOpen = ref(false)
       <div class="hidden items-center gap-3 md:flex">
         <NuxtLink to="/admin/login" class="text-sm font-medium text-muted transition-colors hover:text-ink">Admin login</NuxtLink>
         <BaseButton size="sm" @click="navigateTo('/restaurant/login')">
-          Restaurant login / register
+          Restaurant login
         </BaseButton>
       </div>
 
@@ -35,7 +36,7 @@ const mobileOpen = ref(false)
           <a href="#how-it-works" class="rounded-control px-3 py-2.5 text-sm font-medium text-ink hover:bg-black/5" @click="mobileOpen = false">How it works</a>
           <a href="#for-restaurants" class="rounded-control px-3 py-2.5 text-sm font-medium text-ink hover:bg-black/5" @click="mobileOpen = false">For restaurants</a>
           <NuxtLink to="/admin/login" class="rounded-control px-3 py-2.5 text-sm font-medium text-ink hover:bg-black/5" @click="mobileOpen = false">Admin login</NuxtLink>
-          <BaseButton class="mt-2" block @click="navigateTo('/restaurant/login')">Restaurant login / register</BaseButton>
+          <BaseButton class="mt-2" block @click="navigateTo('/restaurant/login')">Restaurant login</BaseButton>
         </div>
       </div>
     </Transition>

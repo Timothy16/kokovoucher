@@ -1,17 +1,18 @@
+<!-- app/pages/index.vue -->
 <script setup lang="ts">
 definePageMeta({ layout: 'default' })
 
 const steps = [
-  { icon: 'lucide:gift', title: 'Customer earns a reward', desc: 'Our system spots loyal customers and issues them a fixed-value voucher automatically.' },
-  { icon: 'lucide:smartphone', title: 'Activates it on their phone', desc: 'One tap and a quick code — no app, no account, no login required.' },
-  { icon: 'lucide:check-check', title: 'Redeems it at your restaurant', desc: 'Shown at the counter, verified in seconds, done.' }
+  { icon: 'lucide:gift', title: 'Customer earns a reward', desc: 'A voucher code and secret key are sent by email and WhatsApp — no app, no account, no login required.' },
+  { icon: 'lucide:utensils-crossed', title: 'Orders delivery, or walks in', desc: 'They pick a combo from the partner menu and check out with their code, or redeem it in person at any partner restaurant.' },
+  { icon: 'lucide:check-check', title: 'Redeems it at your restaurant', desc: 'Verified in seconds — for delivery, you fulfil and mark it delivered; for walk-ins, you confirm at the counter.' }
 ]
 
 const benefits = [
   { icon: 'lucide:footprints', title: 'New footfall', desc: "Reach a fintech's loyal customer base and bring new faces to your tables." },
-  { icon: 'lucide:coins', title: 'Zero setup cost', desc: 'No hardware, no contracts, no upfront fees — just register and go.' },
+  { icon: 'lucide:coins', title: 'Zero setup cost', desc: 'No hardware, no contracts, no upfront fees — just accept your invite and go.' },
   { icon: 'lucide:timer', title: 'Redeem in seconds', desc: 'Scan or type a code from any phone or tablet at the counter.' },
-  { icon: 'lucide:shield-check', title: 'Single-use & verified', desc: 'Every voucher is tied to your restaurant and can only be redeemed once.' }
+  { icon: 'lucide:shield-check', title: 'Single-use & verified', desc: 'Every voucher is checked against a code and secret key, and can only be redeemed once.' }
 ]
 
 const trust = [
@@ -40,7 +41,7 @@ const trust = [
             KokoVoucher turns rewards into real footfall for your restaurant.
           </p>
           <div class="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
-            <BaseButton size="lg" @click="navigateTo('/restaurant/register')">
+            <BaseButton size="lg" @click="navigateTo('/contact')">
               Become a partner restaurant
               <Icon name="lucide:arrow-right" class="size-4" />
             </BaseButton>
@@ -86,8 +87,8 @@ const trust = [
           </BaseCard>
         </div>
         <div v-reveal class="mt-12 text-center">
-          <BaseButton size="lg" @click="navigateTo('/restaurant/register')">
-            Register your restaurant
+          <BaseButton size="lg" @click="navigateTo('/contact')">
+            Apply to partner
             <Icon name="lucide:arrow-right" class="size-4" />
           </BaseButton>
         </div>
@@ -111,8 +112,8 @@ const trust = [
           <h2 class="text-2xl font-extrabold tracking-tight sm:text-3xl">Ready to partner with us?</h2>
           <p class="mt-2 text-primary-soft/90">Join the KokoVoucher network in minutes.</p>
         </div>
-        <BaseButton size="lg" variant="secondary" class="!bg-white !text-primary-hover" @click="navigateTo('/restaurant/register')">
-          Register your restaurant
+        <BaseButton size="lg" variant="secondary" class="!bg-white !text-primary-hover" @click="navigateTo('/contact')">
+          Apply to partner
         </BaseButton>
       </div>
     </section>

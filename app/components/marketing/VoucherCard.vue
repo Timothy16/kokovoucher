@@ -1,3 +1,4 @@
+<!-- app/components/marketing/VoucherCard.vue -->
 <script setup lang="ts">
 // Deterministic pattern for the mock QR so it renders identically every time.
 const QR_PATTERN = [
@@ -15,7 +16,7 @@ const QR_PATTERN = [
       <div class="flex items-start justify-between gap-4 bg-primary px-6 py-5">
         <div>
           <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70">Reward voucher</p>
-          <p class="mt-1 text-[26px] font-extrabold leading-tight text-white">£10 off your meal</p>
+          <p class="mt-1 text-[26px] font-extrabold leading-tight text-white">₦5,000 off your meal</p>
         </div>
         <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/15 text-white">
           <Icon name="lucide:utensils-crossed" class="size-5" />
@@ -47,9 +48,9 @@ const QR_PATTERN = [
             <p class="text-xs font-medium text-muted">Single-use code</p>
             <p class="mt-1 font-mono text-lg font-bold tracking-[0.18em] text-ink">KV-4P8Q</p>
             <p class="mt-3 text-xs leading-relaxed text-muted">
-              Valid at Rosa's Kitchen
+              Valid at any partner restaurant
               <br />
-              until Sun, 8:00 pm
+              for 7 days
             </p>
           </div>
         </div>

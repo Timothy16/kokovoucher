@@ -1,3 +1,4 @@
+<!-- app/layouts/customer.vue -->
 <template>
   <div class="flex min-h-screen flex-col bg-bg">
     <header class="hidden h-16 items-center justify-center border-b border-border/80 sm:flex">

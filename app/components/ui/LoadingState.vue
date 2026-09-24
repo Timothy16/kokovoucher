@@ -1,3 +1,4 @@
+<!-- app/components/ui/LoadingState.vue -->
 <script setup lang="ts">
 withDefaults(defineProps<{ rows?: number }>(), { rows: 4 })
 </script>

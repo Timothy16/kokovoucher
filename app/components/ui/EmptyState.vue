@@ -1,3 +1,4 @@
+<!-- app/components/ui/EmptyState.vue -->
 <script setup lang="ts">
 withDefaults(
   defineProps<{

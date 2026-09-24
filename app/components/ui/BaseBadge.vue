@@ -1,3 +1,4 @@
+<!-- app/components/ui/BaseBadge.vue -->
 <script setup lang="ts">
 const props = withDefaults(
   defineProps<{

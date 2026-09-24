@@ -1,3 +1,4 @@
+<!-- app/pages/admin/login.vue -->
 <script setup lang="ts">
 definePageMeta({ layout: 'customer' })
 

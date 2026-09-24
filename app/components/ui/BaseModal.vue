@@ -1,3 +1,4 @@
+<!-- app/components/ui/BaseModal.vue -->
 <script setup lang="ts">
 const props = defineProps<{ modelValue: boolean; title?: string }>()
 const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()

@@ -1,3 +1,4 @@
+<!-- app/components/ui/CountdownBadge.vue -->
 <script setup lang="ts">
 const props = defineProps<{ expiresAt: string }>()
 const { label, isExpired, isUrgent } = useCountdown(computed(() => props.expiresAt))

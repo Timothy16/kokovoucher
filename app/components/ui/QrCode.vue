@@ -1,3 +1,4 @@
+<!-- app/components/ui/QrCode.vue -->
 <script setup lang="ts">
 const props = withDefaults(defineProps<{ value: string; size?: number }>(), { size: 220 })
 const dataUrl = ref('')
