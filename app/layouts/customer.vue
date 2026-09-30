@@ -6,7 +6,7 @@
         <span class="flex size-8 items-center justify-center rounded-full bg-primary text-white">
           <Icon name="lucide:ticket" class="size-4" />
         </span>
-        KokoVoucher
+        KokoSend
       </NuxtLink>
     </header>
     <main class="flex flex-1 flex-col sm:items-center sm:justify-center sm:px-4 sm:py-10">

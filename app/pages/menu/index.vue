@@ -1,23 +1,23 @@
 <!-- app/pages/menu/index.vue -->
 <script setup lang="ts">
+import { CURRENCIES } from '#shared/types/models'
+
 definePageMeta({ layout: 'default' })
 
-const { publicMenu } = useMockDb()
+const route = useRoute()
 
-const pending = ref(true)
-onMounted(() => setTimeout(() => (pending.value = false), 350))
+const { data: menu, pending, error, refresh } = useAsyncData('public-menu', fetchPublicMenu)
 
-const filters = reactive({ restaurantId: '', category: '', currency: '' })
+// ?currency=… comes from the checkout's currency-mismatch link.
+const initialCurrency = typeof route.query.currency === 'string' && (CURRENCIES as readonly string[]).includes(route.query.currency) ? route.query.currency : ''
+const filters = reactive({ restaurantId: '', category: '', currency: initialCurrency })
 
 const restaurantOptions = computed(() => {
   const seen = new Map<string, string>()
-  for (const row of publicMenu.value) seen.set(row.restaurant.id, row.restaurant.name)
-  return Array.from(seen, ([value, label]) => ({ value, label }))
+  for (const item of menu.value ?? []) seen.set(item.restaurant_id, item.restaurant_name)
+  return Array.from(seen, ([value, label]) => ({ value, label })).sort((a, b) => a.label.localeCompare(b.label))
 })
-const categoryOptions = computed(() => {
-  const seen = new Set(publicMenu.value.map((row) => row.combo.category))
-  return Array.from(seen, (c) => ({ value: c, label: c }))
-})
+const categoryOptions = computed(() => Array.from(new Set((menu.value ?? []).map((i) => i.category)), (c) => ({ value: c, label: c })))
 const currencyOptions = [
   { value: 'NGN', label: 'NGN — ₦' },
   { value: 'KES', label: 'KES — KSh' },
@@ -32,19 +32,13 @@ function clearFilters() {
 }
 
 const rows = computed(() =>
-  publicMenu.value.filter((row) => {
-    if (filters.restaurantId && row.restaurant.id !== filters.restaurantId) return false
-    if (filters.category && row.combo.category !== filters.category) return false
-    if (filters.currency && row.restaurant.currency !== filters.currency) return false
+  (menu.value ?? []).filter((item) => {
+    if (filters.restaurantId && item.restaurant_id !== filters.restaurantId) return false
+    if (filters.category && item.category !== filters.category) return false
+    if (filters.currency && item.currency !== filters.currency) return false
     return true
   })
 )
-
-const route = useRoute()
-onMounted(() => {
-  const c = route.query.currency
-  if (typeof c === 'string') filters.currency = c
-})
 </script>
 
 <template>
@@ -74,11 +68,13 @@ onMounted(() => {
       <button v-if="hasFilters" class="mt-3 text-xs font-semibold text-primary" @click="clearFilters">Clear filters</button>
     </BaseCard>
 
-    <LoadingState v-if="pending" class="mt-6" :rows="4" />
+    <LoadingState v-if="pending && !menu" class="mt-6" :rows="4" />
+    <ErrorState v-else-if="error" class="mt-6" message="We couldn't load the menu." @retry="refresh()" />
+    <EmptyState v-else-if="!menu?.length" class="mt-6" icon="lucide:utensils-crossed" title="The menu is empty right now" message="Partner restaurants will appear here soon. You can still redeem your voucher in person." />
     <EmptyState v-else-if="!rows.length" class="mt-6" icon="lucide:search-x" title="No combos match" message="Try clearing your filters." />
 
     <div v-else class="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-      <ComboCard v-for="row in rows" :key="row.combo.id" :combo="row.combo" :restaurant="row.restaurant" />
+      <ComboCard v-for="item in rows" :key="item.id" :item="item" />
     </div>
   </div>
 </template>

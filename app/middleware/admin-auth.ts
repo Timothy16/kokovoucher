@@ -1,7 +1,8 @@
 // app/middleware/admin-auth.ts
-export default defineNuxtRouteMiddleware(() => {
-  const { session } = useMockDb()
-  if (session.value.role !== 'admin') {
+export default defineNuxtRouteMiddleware(async () => {
+  const auth = useAuth()
+  await auth.ready()
+  if (auth.role.value !== 'admin') {
     return navigateTo('/admin/login')
   }
 })

@@ -1,7 +1,9 @@
 <!-- app/layouts/admin.vue -->
 <script setup lang="ts">
-const { db, logout, dashboardSummary } = useMockDb()
+const auth = useAuth()
+const supabase = useSupabase()
 const router = useRouter()
+const route = useRoute()
 
 const navItems = [
   { to: '/admin', label: 'Dashboard', icon: 'lucide:layout-dashboard' },
@@ -16,21 +18,31 @@ const navItems = [
   { to: '/admin/settings', label: 'Settings', icon: 'lucide:settings' }
 ]
 
-const badgeCount = computed(() => dashboardSummary.value.invitedRestaurants + dashboardSummary.value.openDisputes)
+// "Needs attention": restaurants yet to accept their invite + open delivery disputes.
+// Re-counted on every navigation so it reflects actions just taken.
+const attentionCount = ref(0)
+async function countAttention() {
+  const [invited, disputes] = await Promise.all([
+    supabase.from('restaurants').select('id', { count: 'exact', head: true }).eq('status', 'invited'),
+    supabase.from('orders').select('id', { count: 'exact', head: true }).eq('dispute_status', 'open')
+  ])
+  attentionCount.value = (invited.count ?? 0) + (disputes.count ?? 0)
+}
+watch(() => route.path, countAttention, { immediate: true })
 
-function handleLogout() {
-  logout()
+async function handleLogout() {
+  await auth.signOut()
   router.push('/admin/login')
 }
 </script>
 
 <template>
   <DashboardShell
-    brand="KokoVoucher Admin"
+    brand="KokoSend Admin"
     :nav-items="navItems"
-    :identity-label="db.admin.name"
-    :identity-sub="db.admin.email"
-    :badge="badgeCount > 0 ? { tone: 'warning', label: `${badgeCount} needs attention` } : undefined"
+    identity-label="Admin"
+    :identity-sub="auth.user.value?.email ?? ''"
+    :badge="attentionCount > 0 ? { tone: 'warning', label: `${attentionCount} needs attention` } : undefined"
     @logout="handleLogout"
   >
     <slot />

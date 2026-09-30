@@ -10,7 +10,7 @@ const mobileOpen = ref(false)
         <span class="flex size-8 items-center justify-center rounded-full bg-primary text-white">
           <Icon name="lucide:ticket" class="size-4" />
         </span>
-        KokoVoucher
+        KokoSend
       </NuxtLink>
 
       <div class="hidden items-center gap-8 md:flex">

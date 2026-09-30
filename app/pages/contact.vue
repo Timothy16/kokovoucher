@@ -3,9 +3,9 @@
 definePageMeta({ layout: 'default' })
 
 const channels = [
-  { icon: 'lucide:mail', label: 'Email', value: 'hello@kokovoucher.app' },
+  { icon: 'lucide:mail', label: 'Email', value: 'hello@kokosend.com' },
   { icon: 'lucide:message-circle', label: 'WhatsApp', value: '+234 800 000 0000' },
-  { icon: 'lucide:store', label: 'Restaurant partnerships', value: 'partners@kokovoucher.app' }
+  { icon: 'lucide:store', label: 'Restaurant partnerships', value: 'partners@kokosend.com' }
 ]
 </script>
 

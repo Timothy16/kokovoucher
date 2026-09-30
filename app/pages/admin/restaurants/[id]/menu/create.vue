@@ -1,26 +1,50 @@
 <!-- app/pages/admin/restaurants/[id]/menu/create.vue -->
 <script setup lang="ts">
+import type { ComboFormValues } from '~/components/admin/ComboForm.vue'
+
 definePageMeta({ layout: 'admin', middleware: 'admin-auth' })
 
 const route = useRoute()
 const router = useRouter()
-const { getRestaurant, createCombo } = useMockDb()
+const supabase = useSupabase()
+const api = useApi()
 const toast = useToast()
 
 const restaurantId = route.params.id as string
-const restaurant = computed(() => getRestaurant(restaurantId))
-const saving = ref(false)
 
-async function handleSubmit(payload: {
-  name: string; shortDescription: string; description: string; category: string; imageUrl: string | null
-  spiceOption: boolean; sodaOptions: string[]; waterOption: boolean
-}) {
+const { data: restaurant, pending, error, refresh } = useAsyncData(`admin-menu-restaurant-${restaurantId}`, async () => {
+  const { data, error } = await supabase.from('restaurants').select('name').eq('id', restaurantId).maybeSingle()
+  if (error) throw error
+  return data
+})
+
+const saving = ref(false)
+async function handleSubmit(values: ComboFormValues) {
   saving.value = true
-  await new Promise((r) => setTimeout(r, 350))
-  createCombo({ restaurantId, ...payload })
-  saving.value = false
-  toast.success('Combo added')
-  router.push(`/admin/restaurants/${restaurantId}/menu`)
+  let imagePath: string | null = null
+  try {
+    imagePath = await resolveImageField('combo-images', values.image, null)
+    await api(`/api/admin/restaurants/${restaurantId}/combos`, {
+      method: 'POST',
+      body: {
+        name: values.name,
+        shortDescription: values.shortDescription,
+        description: values.description,
+        category: values.category,
+        imagePath,
+        spiceOption: values.spiceOption,
+        sodaOptions: values.sodaOptions,
+        waterOption: values.waterOption
+      }
+    })
+    toast.success('Combo added')
+    router.push(`/admin/restaurants/${restaurantId}/menu`)
+  } catch (e) {
+    await discardImage('combo-images', imagePath)
+    toast.error('Could not add combo', apiErrorMessage(e))
+  } finally {
+    saving.value = false
+  }
 }
 </script>
 
@@ -31,7 +55,9 @@ async function handleSubmit(payload: {
       Back to menu
     </NuxtLink>
 
-    <EmptyState v-if="!restaurant" icon="lucide:search-x" title="Restaurant not found" />
+    <LoadingState v-if="pending && !restaurant" :rows="3" />
+    <ErrorState v-else-if="error" message="We couldn't load this restaurant." @retry="refresh()" />
+    <EmptyState v-else-if="!restaurant" icon="lucide:search-x" title="Restaurant not found" />
 
     <template v-else>
       <div>

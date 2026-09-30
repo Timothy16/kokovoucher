@@ -12,7 +12,7 @@ const year = new Date().getFullYear()
             <span class="flex size-8 items-center justify-center rounded-full bg-primary text-white">
               <Icon name="lucide:ticket" class="size-4" />
             </span>
-            KokoVoucher
+            KokoSend
           </div>
           <p class="mt-2 max-w-xs text-sm text-muted">Rewards that turn into real footfall for your restaurant.</p>
         </div>
@@ -37,7 +37,7 @@ const year = new Date().getFullYear()
           </div>
         </div>
       </div>
-      <div class="mt-8 border-t border-border pt-6 text-xs text-muted">© {{ year }} KokoVoucher. All rights reserved.</div>
+      <div class="mt-8 border-t border-border pt-6 text-xs text-muted">© {{ year }} KokoSend. All rights reserved.</div>
     </div>
   </footer>
 </template>

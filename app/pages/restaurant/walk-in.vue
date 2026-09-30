@@ -1,77 +1,65 @@
 <!-- app/pages/restaurant/walk-in.vue -->
 <script setup lang="ts">
+import type { Currency } from '#shared/types/models'
+
 definePageMeta({ layout: 'restaurant', middleware: 'restaurant-auth' })
 
-import type { Voucher } from '~/composables/useMockDb'
+const api = useApi()
+const { restaurant } = useAuth()
 
-const { currentRestaurant, verifyVoucherAccess, completeWalkIn } = useMockDb()
-const toast = useToast()
-
-type Step = 'verify' | 'bill' | 'result'
+type Step = 'verify' | 'bill' | 'done'
 const step = ref<Step>('verify')
-const scanning = ref(false)
 
+// ---------- step 1: check the voucher ----------
 const code = ref('')
 const secretKey = ref('')
 const verifying = ref(false)
 const verifyError = ref('')
-const currencyMismatch = ref(false)
-const voucher = ref<Voucher | null>(null)
+const mismatch = ref(false)
+const voucher = ref<{ amount: number; currency: Currency; customerFirstName: string | null } | null>(null)
 
-const verifyReasonCopy: Record<string, string> = {
-  NOT_FOUND: "We couldn't find a voucher with that code.",
-  WRONG_CREDENTIALS: "That code or secret key doesn't look right.",
-  LOCKED: 'Too many incorrect attempts — this voucher is now locked.',
-  EXPIRED: 'This voucher has expired.',
-  ALREADY_USED: 'This voucher has already been used.'
-}
-
-async function submitVerify() {
-  if (!code.value.trim() || !secretKey.value.trim() || !currentRestaurant.value) return
-  verifyError.value = ''
-  currencyMismatch.value = false
+async function verify() {
+  if (verifying.value || !code.value.trim() || !secretKey.value.trim()) return
   verifying.value = true
-  await new Promise((r) => setTimeout(r, 350))
-  const res = verifyVoucherAccess(code.value, secretKey.value)
-  verifying.value = false
-
-  if (!res.ok || !res.voucher) {
-    let msg = verifyReasonCopy[res.reason ?? 'NOT_FOUND'] ?? 'Could not verify this voucher.'
-    if (res.reason === 'WRONG_CREDENTIALS' && res.attemptsLeft !== undefined) msg += ` ${res.attemptsLeft} attempt${res.attemptsLeft === 1 ? '' : 's'} left.`
-    verifyError.value = msg
-    return
+  verifyError.value = ''
+  mismatch.value = false
+  try {
+    voucher.value = await api('/api/restaurant/walk-ins/verify', { method: 'POST', body: { code: code.value, secretKey: secretKey.value } })
+    step.value = 'bill'
+  } catch (e) {
+    mismatch.value = (e as { data?: { data?: { reason?: string } } })?.data?.data?.reason === 'CURRENCY_MISMATCH'
+    verifyError.value = apiErrorMessage(e, "Couldn't check this voucher. Please try again.")
+  } finally {
+    verifying.value = false
   }
-  if (res.voucher.currency !== currentRestaurant.value.currency) {
-    currencyMismatch.value = true
-    return
-  }
-  voucher.value = res.voucher
-  step.value = 'bill'
 }
 
-function onDecode(value: string) {
-  scanning.value = false
-  code.value = value
-  submitVerify()
-}
-
+// ---------- step 2: the bill (rule 10: credit = min(voucher, bill), remainder forfeited) ----------
 const billAmount = ref('')
-const completing = ref(false)
-const result = ref<{ credited: number; forfeited: number } | null>(null)
+const bill = computed(() => Number(billAmount.value))
+const billValid = computed(() => !!voucher.value && !!billAmount.value && isValidAmount(bill.value, voucher.value.currency))
+const preview = computed(() => {
+  if (!voucher.value || !billValid.value) return null
+  const credited = Math.min(voucher.value.amount, bill.value)
+  return { credited, forfeited: voucher.value.amount - credited, customerPays: Math.max(0, bill.value - voucher.value.amount) }
+})
 
-async function submitBill() {
-  if (!voucher.value || !currentRestaurant.value || !billAmount.value || Number(billAmount.value) <= 0) return
+const completing = ref(false)
+const completeError = ref('')
+const result = ref<{ currency: Currency; billAmount: number; creditedAmount: number; forfeitedAmount: number } | null>(null)
+
+async function complete() {
+  if (completing.value || !billValid.value) return
   completing.value = true
-  await new Promise((r) => setTimeout(r, 450))
-  const res = completeWalkIn({ code: code.value, secretKey: secretKey.value, restaurantId: currentRestaurant.value.id, billAmount: Number(billAmount.value) })
-  completing.value = false
-  if (!res.ok || !res.walkIn) {
-    toast.error('Could not complete redemption')
-    return
+  completeError.value = ''
+  try {
+    result.value = await api('/api/restaurant/walk-ins', { method: 'POST', body: { code: code.value, secretKey: secretKey.value, billAmount: bill.value } })
+    step.value = 'done'
+  } catch (e) {
+    completeError.value = apiErrorMessage(e, "Couldn't complete the redemption. Please try again.")
+  } finally {
+    completing.value = false
   }
-  result.value = { credited: res.walkIn.creditedAmount, forfeited: res.walkIn.forfeitedAmount }
-  step.value = 'result'
-  toast.success('Redeemed', `${formatCurrency(res.walkIn.creditedAmount, voucher.value.currency)} credited to your wallet.`)
 }
 
 function reset() {
@@ -82,7 +70,8 @@ function reset() {
   voucher.value = null
   result.value = null
   verifyError.value = ''
-  currencyMismatch.value = false
+  completeError.value = ''
+  mismatch.value = false
 }
 </script>
 
@@ -90,61 +79,70 @@ function reset() {
   <div class="mx-auto max-w-md space-y-6">
     <div>
       <h1 class="text-2xl font-extrabold tracking-tight text-ink">Redeem a walk-in</h1>
-      <p class="text-sm text-muted">Verify the customer's voucher, then enter what they actually spent.</p>
+      <p class="text-sm text-muted">Check the customer's voucher, then enter what they actually spent.</p>
     </div>
 
-    <!-- verify -->
-    <template v-if="step === 'verify'">
-      <QrScanner v-if="scanning" @decode="onDecode" @close="scanning = false" />
-      <template v-else>
-        <BaseCard>
-          <form class="space-y-4" @submit.prevent="submitVerify">
-            <BaseInput v-model="code" label="Voucher code" placeholder="AF7K-9QX2" icon="lucide:ticket" required />
-            <BaseInput v-model="secretKey" label="Secret key (KokoSend username)" icon="lucide:key-round" required />
-            <p v-if="verifyError" role="alert" class="flex items-start gap-2 rounded-control bg-error-soft px-3.5 py-2.5 text-xs font-medium text-error">
-              <Icon name="lucide:circle-alert" class="mt-px size-4 shrink-0" />
-              {{ verifyError }}
-            </p>
-            <div v-if="currencyMismatch" class="flex items-start gap-2 rounded-control bg-warning-soft px-3.5 py-3 text-xs font-medium text-ink">
-              <Icon name="lucide:triangle-alert" class="mt-px size-4 shrink-0 text-warning" />
-              This voucher's currency doesn't match your restaurant's ({{ currentRestaurant?.currency }}). It can't be redeemed here.
-            </div>
-            <BaseButton type="submit" size="lg" block :loading="verifying" :disabled="!code.trim() || !secretKey.trim()">Verify voucher</BaseButton>
-          </form>
-        </BaseCard>
-        <button
-          class="mt-4 flex w-full items-center justify-center gap-2 rounded-card border border-dashed border-primary/40 bg-primary-soft/40 py-4 text-sm font-semibold text-primary-hover transition-colors hover:bg-primary-soft"
-          @click="scanning = true"
-        >
-          <Icon name="lucide:scan-line" class="size-5" />
-          Scan QR instead
-        </button>
-      </template>
-    </template>
-
-    <!-- bill -->
-    <BaseCard v-else-if="step === 'bill'" class="animate-fade-up">
-      <div class="rounded-control bg-primary-soft/50 px-4 py-3 text-center">
-        <p class="text-xs text-muted">Voucher value</p>
-        <p class="text-2xl font-extrabold text-ink">{{ formatCurrency(voucher!.amount, voucher!.currency) }}</p>
-      </div>
-      <form class="mt-5 space-y-4" @submit.prevent="submitBill">
-        <BaseInput v-model="billAmount" label="Actual bill amount" type="number" icon="lucide:receipt" placeholder="0.00" required />
-        <p class="text-xs text-muted">
-          You'll be credited whichever is smaller — the bill or the voucher value. Any unused voucher balance is forfeited, not banked.
+    <!-- step 1 -->
+    <BaseCard v-if="step === 'verify'" class="animate-fade-up">
+      <form class="space-y-4" @submit.prevent="verify">
+        <BaseInput id="walkin-code" v-model="code" label="Voucher code" placeholder="AF7K-9QX2" icon="lucide:ticket" autocomplete="off" required />
+        <BaseInput id="walkin-key" v-model="secretKey" label="Secret key (their KokoSend username)" icon="lucide:key-round" autocomplete="off" hint="Ask the customer to type it in themselves if possible." required />
+        <p v-if="verifyError" role="alert" class="flex items-start gap-2 rounded-control px-3.5 py-2.5 text-xs font-medium" :class="mismatch ? 'bg-warning-soft text-ink' : 'bg-error-soft text-error'">
+          <Icon :name="mismatch ? 'lucide:triangle-alert' : 'lucide:circle-alert'" class="mt-px size-4 shrink-0" :class="mismatch ? 'text-warning' : ''" />
+          <span>{{ mismatch ? `This voucher is in a different currency, and your restaurant only takes ${restaurant?.currency} vouchers. It can't be used here.` : verifyError }}</span>
         </p>
-        <BaseButton type="submit" size="lg" block :loading="completing" :disabled="!billAmount || Number(billAmount) <= 0">Complete redemption</BaseButton>
+        <BaseButton type="submit" size="lg" block :loading="verifying" :disabled="!code.trim() || !secretKey.trim()">Check voucher</BaseButton>
       </form>
     </BaseCard>
 
-    <!-- result -->
-    <BaseCard v-else class="animate-pop-in text-center">
-      <div class="mx-auto flex size-20 items-center justify-center rounded-full bg-success-soft animate-pop-in">
+    <!-- step 2 -->
+    <BaseCard v-else-if="step === 'bill' && voucher" class="animate-fade-up">
+      <div class="rounded-control bg-success-soft px-4 py-3 text-center">
+        <p class="flex items-center justify-center gap-1.5 text-xs font-semibold text-success">
+          <Icon name="lucide:badge-check" class="size-4" />
+          Valid voucher{{ voucher.customerFirstName ? ` for ${voucher.customerFirstName}` : '' }}
+        </p>
+        <p class="mt-1 text-3xl font-extrabold text-ink">{{ formatCurrency(voucher.amount, voucher.currency) }}</p>
+      </div>
+
+      <form class="mt-5 space-y-4" @submit.prevent="complete">
+        <BaseInput id="walkin-bill" v-model="billAmount" label="Actual bill amount" type="number" icon="lucide:receipt" :placeholder="voucher.currency === 'USD' ? '0.00' : '0'" required />
+
+        <dl v-if="preview" class="space-y-1.5 rounded-control border border-border bg-black/[0.02] px-4 py-3 text-sm">
+          <div class="flex justify-between"><dt class="text-muted">Credited to your wallet</dt><dd class="font-bold text-success">{{ formatCurrency(preview.credited, voucher.currency) }}</dd></div>
+          <div v-if="preview.customerPays > 0" class="flex justify-between"><dt class="text-muted">Customer pays you the rest</dt><dd class="font-semibold text-ink">{{ formatCurrency(preview.customerPays, voucher.currency) }}</dd></div>
+          <div v-if="preview.forfeited > 0" class="flex justify-between"><dt class="text-muted">Unused voucher balance (forfeited)</dt><dd class="font-semibold text-warning">{{ formatCurrency(preview.forfeited, voucher.currency) }}</dd></div>
+        </dl>
+        <p v-else class="text-xs text-muted">
+          You're credited whichever is smaller: the bill or the voucher value. Unused voucher balance is forfeited, not kept.
+          {{ voucher.currency === 'USD' ? '' : 'Enter a whole amount.' }}
+        </p>
+
+        <p v-if="completeError" role="alert" class="flex items-start gap-2 rounded-control bg-error-soft px-3.5 py-2.5 text-xs font-medium text-error">
+          <Icon name="lucide:circle-alert" class="mt-px size-4 shrink-0" />
+          {{ completeError }}
+        </p>
+
+        <div class="flex gap-3">
+          <BaseButton type="button" variant="secondary" :disabled="completing" @click="reset">Cancel</BaseButton>
+          <BaseButton type="submit" block size="lg" :loading="completing" :disabled="!billValid">Redeem voucher</BaseButton>
+        </div>
+      </form>
+    </BaseCard>
+
+    <!-- step 3 -->
+    <BaseCard v-else-if="step === 'done' && result" class="animate-pop-in text-center">
+      <div class="mx-auto flex size-20 items-center justify-center rounded-full bg-success-soft">
         <Icon name="lucide:check" class="size-10 text-success" />
       </div>
-      <p class="mt-5 text-3xl font-extrabold text-success">{{ formatCurrency(result!.credited, voucher!.currency) }}</p>
+      <p class="mt-5 text-3xl font-extrabold text-success">{{ formatCurrency(result.creditedAmount, result.currency) }}</p>
       <p class="mt-1 text-sm text-muted">credited to your wallet</p>
-      <p v-if="result!.forfeited > 0" class="mt-3 text-xs text-muted">{{ formatCurrency(result!.forfeited, voucher!.currency) }} unused balance was forfeited.</p>
+      <dl class="mt-5 space-y-1.5 rounded-control border border-border px-4 py-3 text-left text-sm">
+        <div class="flex justify-between"><dt class="text-muted">Bill</dt><dd class="font-semibold text-ink">{{ formatCurrency(result.billAmount, result.currency) }}</dd></div>
+        <div v-if="result.billAmount > result.creditedAmount" class="flex justify-between"><dt class="text-muted">Collect from customer</dt><dd class="font-semibold text-ink">{{ formatCurrency(result.billAmount - result.creditedAmount, result.currency) }}</dd></div>
+        <div v-if="result.forfeitedAmount > 0" class="flex justify-between"><dt class="text-muted">Forfeited</dt><dd class="font-semibold text-ink">{{ formatCurrency(result.forfeitedAmount, result.currency) }}</dd></div>
+      </dl>
+      <p class="mt-3 text-xs text-muted">The customer has been emailed a receipt.</p>
       <BaseButton class="mt-6" size="lg" block @click="reset">Redeem another</BaseButton>
     </BaseCard>
   </div>

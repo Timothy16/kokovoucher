@@ -38,7 +38,7 @@ const trust = [
             <span class="text-primary">Fill your tables.</span>
           </h1>
           <p class="mx-auto mt-5 max-w-md text-lg text-muted lg:mx-0">
-            KokoVoucher turns rewards into real footfall for your restaurant.
+            KokoSend turns rewards into real footfall for your restaurant.
           </p>
           <div class="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
             <BaseButton size="lg" @click="navigateTo('/contact')">
@@ -110,7 +110,7 @@ const trust = [
       <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-4 text-center sm:flex-row sm:px-6 sm:text-left">
         <div>
           <h2 class="text-2xl font-extrabold tracking-tight sm:text-3xl">Ready to partner with us?</h2>
-          <p class="mt-2 text-primary-soft/90">Join the KokoVoucher network in minutes.</p>
+          <p class="mt-2 text-primary-soft/90">Join the KokoSend network in minutes.</p>
         </div>
         <BaseButton size="lg" variant="secondary" class="!bg-white !text-primary-hover" @click="navigateTo('/contact')">
           Apply to partner

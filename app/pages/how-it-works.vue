@@ -18,7 +18,7 @@ const restaurantSteps = [
 <template>
   <div class="mx-auto max-w-4xl px-4 py-14 sm:px-6">
     <div class="text-center">
-      <h1 class="text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">How KokoVoucher works</h1>
+      <h1 class="text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">How KokoSend works</h1>
       <p class="mt-3 text-muted">One reward system, two simple journeys.</p>
     </div>
 

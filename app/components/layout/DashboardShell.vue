@@ -2,7 +2,7 @@
 <script setup lang="ts">
 const props = defineProps<{
   brand: string
-  navItems: { to: string; label: string; icon: string }[]
+  navItems: { to: string; label: string; icon: string; count?: number }[]
   identityLabel: string
   identitySub?: string
   badge?: { tone: 'warning' | 'success' | 'muted'; label: string }
@@ -36,6 +36,7 @@ watch(
         >
           <Icon :name="item.icon" class="size-4.5" />
           {{ item.label }}
+          <span v-if="item.count" class="ml-auto rounded-full bg-warning px-2 py-0.5 text-xs font-bold text-white" :aria-label="`${item.count} new`">{{ item.count }}</span>
         </NuxtLink>
       </nav>
       <div class="border-t border-border p-4">
@@ -70,6 +71,7 @@ watch(
           >
             <Icon :name="item.icon" class="size-4.5" />
             {{ item.label }}
+            <span v-if="item.count" class="ml-auto rounded-full bg-warning px-2 py-0.5 text-xs font-bold text-white" :aria-label="`${item.count} new`">{{ item.count }}</span>
           </NuxtLink>
         </nav>
         <div class="border-t border-border p-4">
@@ -83,8 +85,9 @@ watch(
 
     <div class="flex min-w-0 flex-1 flex-col">
       <header class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-bg/85 px-4 backdrop-blur sm:px-6">
-        <button class="rounded-control p-2 text-ink md:hidden" @click="mobileOpen = true">
+        <button class="relative rounded-control p-2 text-ink md:hidden" aria-label="Open menu" @click="mobileOpen = true">
           <Icon name="lucide:menu" class="size-6" />
+          <span v-if="props.navItems.some((i) => i.count)" class="absolute right-1.5 top-1.5 size-2.5 rounded-full bg-warning ring-2 ring-bg" />
         </button>
         <div class="flex items-center gap-2 md:hidden">
           <span class="font-extrabold text-ink">{{ brand }}</span>

@@ -1,8 +1,11 @@
 <!-- app/components/ui/Avatar.vue -->
+<!-- Shows `src` (e.g. a restaurant logo) when given, else a generated avatar from `seed`,
+     falling back to initials if the image can't load. -->
 <script setup lang="ts">
-const props = withDefaults(defineProps<{ seed: string; size?: number }>(), { size: 40 })
+const props = withDefaults(defineProps<{ seed: string; size?: number; src?: string | null }>(), { size: 40, src: null })
 const errored = ref(false)
-const src = computed(() => `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(props.seed)}&backgroundColor=e9f3ef`)
+watch(() => props.src, () => (errored.value = false))
+const url = computed(() => props.src || `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(props.seed)}&backgroundColor=e9f3ef`)
 const initials = computed(() =>
   props.seed
     .split(/[\s@._-]+/)
@@ -16,10 +19,10 @@ const initials = computed(() =>
 <template>
   <img
     v-if="!errored"
-    :src="src"
+    :src="url"
     :width="size"
     :height="size"
-    class="shrink-0 rounded-full border border-border bg-primary-soft"
+    class="shrink-0 rounded-full border border-border bg-primary-soft object-cover"
     :style="{ width: `${size}px`, height: `${size}px` }"
     alt=""
     @error="errored = true"

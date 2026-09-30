@@ -1,6 +1,6 @@
-# KokoVoucher — MVP Build Guide (v2)
+# KokoSend — MVP Build Guide (v2)
 
-> **KokoVoucher** is a standalone web app for issuing, redeeming, and delivering fixed‑value restaurant food vouchers. Admin issues a voucher to a customer (identified by their **KokoSend username**, used here as a "secret key"). The customer either orders delivery from a menu of partner restaurants, or walks into any partner restaurant and redeems the voucher in person. This document is the single source of truth for the MVP build — screens, business rules, data model, and mock data — currently built against a mock (localStorage) data layer, with a service-layer boundary so a real backend can replace it later without rewriting the UI.
+> **KokoSend** is a standalone web app for issuing, redeeming, and delivering fixed‑value restaurant food vouchers. Admin issues a voucher to a customer (identified by their **KokoSend username**, used here as a "secret key"). The customer either orders delivery from a menu of partner restaurants, or walks into any partner restaurant and redeems the voucher in person. This document is the single source of truth for the MVP build — screens, business rules, data model, and mock data — currently built against a mock (localStorage) data layer, with a service-layer boundary so a real backend can replace it later without rewriting the UI.
 
 This is a **v2 rewrite**. It replaces the original OTP‑claim, restaurant‑bound, 24‑hour voucher model entirely. See §9 for what changed and why.
 

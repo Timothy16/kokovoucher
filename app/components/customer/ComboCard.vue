@@ -1,27 +1,24 @@
 <!-- app/components/customer/ComboCard.vue -->
 <script setup lang="ts">
-import type { Combo, Restaurant } from '~/composables/useMockDb'
+import type { MenuItem } from '#shared/types/models'
 
-const props = defineProps<{ combo: Combo; restaurant: Restaurant }>()
-const hasDrinks = computed(() => props.combo.sodaOptions.length > 0 || props.combo.waterOption)
+const props = defineProps<{ item: MenuItem }>()
+const hasDrinks = computed(() => props.item.soda_options.length > 0 || props.item.water_option)
 </script>
 
 <template>
-  <NuxtLink :to="`/menu/${combo.id}`" class="group block animate-fade-up">
+  <NuxtLink :to="`/menu/${item.id}`" class="group block animate-fade-up">
     <BaseCard hover :padded="false" class="overflow-hidden">
-      <div class="flex aspect-[16/10] items-center justify-center bg-primary-soft">
-        <img v-if="combo.imageUrl" :src="combo.imageUrl" :alt="combo.name" class="size-full object-cover" />
-        <Icon v-else name="lucide:utensils-crossed" class="size-10 text-primary/50" />
-      </div>
+      <img :src="storagePublicUrl('combo-images', item.image_path) ?? undefined" :alt="item.name" loading="lazy" class="aspect-[16/10] w-full bg-primary-soft object-cover" />
       <div class="p-4">
         <div class="flex items-start justify-between gap-2">
-          <p class="font-bold text-ink transition-colors group-hover:text-primary">{{ combo.name }}</p>
-          <BaseBadge tone="muted">{{ restaurant.currency }}</BaseBadge>
+          <p class="font-bold text-ink transition-colors group-hover:text-primary">{{ item.name }}</p>
+          <BaseBadge tone="muted">{{ item.currency }}</BaseBadge>
         </div>
-        <p class="mt-1 line-clamp-2 text-sm text-muted">{{ combo.shortDescription }}</p>
+        <p class="mt-1 line-clamp-2 text-sm text-muted">{{ item.short_description }}</p>
 
-        <div v-if="combo.spiceOption || hasDrinks" class="mt-2 flex flex-wrap gap-1.5">
-          <span v-if="combo.spiceOption" class="inline-flex items-center gap-1 rounded-full bg-warning-soft px-2 py-0.5 text-[11px] font-semibold text-warning" title="Spicy or non-spicy — your choice">
+        <div v-if="item.spice_option || hasDrinks" class="mt-2 flex flex-wrap gap-1.5">
+          <span v-if="item.spice_option" class="inline-flex items-center gap-1 rounded-full bg-warning-soft px-2 py-0.5 text-[11px] font-semibold text-warning" title="Spicy or non-spicy — your choice">
             <Icon name="lucide:flame" class="size-3" />
             Spice choice
           </span>
@@ -31,12 +28,12 @@ const hasDrinks = computed(() => props.combo.sodaOptions.length > 0 || props.com
           </span>
         </div>
 
-        <div class="mt-3 flex items-center justify-between border-t border-border pt-3 text-xs">
-          <span class="inline-flex items-center gap-1.5 font-semibold text-ink">
-            <Icon name="lucide:store" class="size-3.5 text-muted" />
-            {{ restaurant.name }}
+        <div class="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3 text-xs">
+          <span class="inline-flex min-w-0 items-center gap-1.5 font-semibold text-ink">
+            <Icon name="lucide:store" class="size-3.5 shrink-0 text-muted" />
+            <span class="truncate">{{ item.restaurant_name }}</span>
           </span>
-          <span class="text-muted">{{ combo.category }}</span>
+          <span class="shrink-0 text-muted">{{ item.category }}</span>
         </div>
       </div>
     </BaseCard>
