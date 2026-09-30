@@ -14,7 +14,7 @@ const openIndex = ref<number | null>(0)
 </script>
 
 <template>
-  <div class="mx-auto max-w-2xl px-4 py-14 sm:px-6">
+  <div class="mx-auto max-w-2xl px-4 py-14  sm:px-6">
     <h1 class="text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">Frequently asked questions</h1>
     <div class="mt-8 divide-y divide-border rounded-card border border-border bg-surface shadow-soft">
       <div v-for="(f, i) in faqs" :key="f.q">
