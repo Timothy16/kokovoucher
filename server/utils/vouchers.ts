@@ -6,10 +6,7 @@ import { isValidAmount } from '#shared/utils/format'
 export const issueVoucherSchema = z
   .object({
     customerFullName: z.string({ error: "Enter the customer's full name." }).trim().min(2, "Enter the customer's full name.").max(120, 'That name is too long.'),
-    customerPhone: z
-      .string({ error: 'Enter a valid phone number.' })
-      .trim()
-      .regex(/^\+?[0-9][0-9 ()-]{6,19}$/, 'Enter a valid phone number, e.g. +2348012345678.'),
+    customerPhone: internationalPhone('phone number'),
     customerEmail: z.string({ error: 'Enter a valid email.' }).trim().toLowerCase().max(254).pipe(z.email('Enter a valid email.')),
     secretKey: z
       .string({ error: "Enter the customer's KokoSend username." })

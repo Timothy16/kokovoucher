@@ -93,6 +93,7 @@ Browser ──reads (RLS)──────────────▶ Supabase 
 | Restaurant invites | Token stored hashed, single use, expires after 7 days, resending revokes the old link |
 | Passwords | Min 8 characters; forgot-password via Supabase Auth (its SMTP is still Resend) |
 | Amounts | USD may have cents; NGN/KES are whole numbers (DB check constraint) |
+| Phone numbers | Entered with a country picker (`PhoneInput`), stored in international E.164 form (`+2348030000001`), validated with libphonenumber-js in the app and on the server (`internationalPhone`) |
 | Seed data | None — the database starts empty except for the admin account |
 | Brand | The product is **KokoSend** (renamed from KokoVoucher). Internal identifiers (package name, storage keys, repo folder) keep the old name |
 | Emails | One design system (`server/utils/email.ts`), all wording in `server/utils/email-templates.ts`. Replies go to the admin email from Settings. Voucher codes never appear in the inbox preview text |
@@ -430,9 +431,15 @@ now runs on Supabase.
   the customer gave at checkout. Buttons link to `https://voucher.kokosend.com/…` (fixed in the
   approved templates, so this holds even on demo)
 - **No template yet → email only**, logged as *skipped*: walk-in receipt, voucher cancelled
-- **Phone numbers:** sent in international form. A local `0…` number gets the country code of the
-  voucher currency (NGN → 234, KES → 254); one we can't be sure of (e.g. local number on a USD
-  voucher) is logged as *failed*, never guessed
+- **Phone numbers:** every phone field (generate voucher, checkout phone + WhatsApp, restaurant
+  contact) uses `app/components/ui/PhoneInput.vue`: a country picker (default from the currency:
+  NGN → Nigeria, KES → Kenya, USD → US) plus the number, a live "WhatsApp messages will go to
+  +234 803 000 0001" line, and plain-language errors ("too short for a Nigeria number"). A leading 0
+  is dropped automatically; pasting `+254…` switches the country. The server refuses anything that
+  isn't a valid international number (`internationalPhone` in `server/utils/http.ts`) and stores
+  E.164. Shared rules: `shared/utils/phone.ts`. Numbers saved before this change may be in local
+  form: `toWhatsappNumber` still converts those using the voucher currency, and `PhoneInput`
+  converts them when an edit form opens
 - **Notification log:** WhatsApp rows now show *sent* (with Infobip's message id) or *failed*
   (with Infobip's reason), like email
 - **Test page** `/admin/infobip-test` (admin only, not in the menu) stays for diagnostics: send a

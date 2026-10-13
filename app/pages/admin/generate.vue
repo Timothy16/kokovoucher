@@ -14,11 +14,13 @@ const confirmOpen = ref(false)
 const success = ref<{ id: string; code: string; amount: number; currency: Currency; secretKey: string; emailed: boolean } | null>(null)
 
 const amountNumber = computed(() => Number(form.amount))
+// The phone's country follows the voucher currency (NGN → Nigeria, KES → Kenya) until changed.
+const phoneCountry = computed(() => (form.currency ? CURRENCY_COUNTRY[form.currency] : 'NG'))
 
 function validate() {
   Object.keys(errors).forEach((k) => delete errors[k])
   if (form.customerFullName.trim().length < 2) errors.customerFullName = "Enter the customer's full name."
-  if (!/^\+?[0-9][0-9 ()-]{6,19}$/.test(form.customerPhone.trim())) errors.customerPhone = 'Enter a valid phone number, e.g. +2348012345678.'
+  if (!toE164(form.customerPhone)) errors.customerPhone = 'Enter a valid phone number. Check the country code on the left.'
   if (!/^\S+@\S+\.\S+$/.test(form.customerEmail.trim())) errors.customerEmail = 'Enter a valid email.'
   if (form.secretKey.trim().length < 2) errors.secretKey = "Enter the customer's KokoSend username."
   else if (/\s/.test(form.secretKey.trim())) errors.secretKey = 'A KokoSend username has no spaces.'
@@ -100,7 +102,7 @@ function reset() {
     <BaseCard v-else class="animate-fade-up">
       <form class="space-y-4" @submit.prevent="askConfirm">
         <BaseInput v-model="form.customerFullName" label="Full name" icon="lucide:user" :error="errors.customerFullName" required />
-        <BaseInput v-model="form.customerPhone" label="Phone number" type="tel" icon="lucide:phone" placeholder="+234…" :error="errors.customerPhone" required />
+        <PhoneInput v-model="form.customerPhone" label="Phone number (WhatsApp)" :default-country="phoneCountry" confirm-label="WhatsApp messages will go to" hint="Pick the country, then the number. The voucher is sent here on WhatsApp." :error="errors.customerPhone" required />
         <BaseInput v-model="form.customerEmail" label="Email" type="email" icon="lucide:mail" hint="The voucher code is sent here." :error="errors.customerEmail" required />
         <BaseInput v-model="form.secretKey" label="Secret key (KokoSend username)" icon="lucide:key-round" hint="The customer enters this with the code to use the voucher." :error="errors.secretKey" required />
         <div class="grid grid-cols-2 gap-4">
@@ -122,7 +124,8 @@ function reset() {
       </p>
       <div class="mt-4 rounded-control border border-border bg-black/[0.02] px-4 py-3 text-sm">
         <div class="flex justify-between gap-3"><span class="text-muted">Value</span><span class="font-bold text-ink">{{ form.currency ? formatCurrency(amountNumber || 0, form.currency) : '—' }}</span></div>
-        <div class="mt-1.5 flex justify-between gap-3"><span class="text-muted">Sent to</span><span class="truncate font-semibold text-ink">{{ form.customerEmail.trim() }}</span></div>
+        <div class="mt-1.5 flex justify-between gap-3"><span class="text-muted">Email</span><span class="truncate font-semibold text-ink">{{ form.customerEmail.trim() }}</span></div>
+        <div class="mt-1.5 flex justify-between gap-3"><span class="text-muted">WhatsApp</span><span class="font-semibold text-ink">{{ formatPhone(form.customerPhone) }}</span></div>
       </div>
       <div class="mt-5 flex gap-3">
         <BaseButton variant="secondary" block :disabled="submitting" @click="confirmOpen = false">Cancel</BaseButton>

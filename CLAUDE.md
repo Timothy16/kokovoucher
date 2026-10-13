@@ -16,6 +16,8 @@ Read `README.md` first, especially **Current status**, **Working on this codebas
   WhatsApp only through Meta-approved templates in `server/utils/whatsapp-templates.ts`.
 - Sensitive admin actions call `audit()`. Never put secrets (tokens, keys) in logs or notification
   summaries.
+- Phone numbers: use `PhoneInput` in the UI and `internationalPhone()` in server schemas; store
+  E.164 (`+2348030000001`). Never accept a number without its country code.
 - User-facing name is **KokoSend** (not KokoVoucher). Money: USD may have cents; NGN/KES are whole
   numbers. Voucher expiry is defined in UTC.
 

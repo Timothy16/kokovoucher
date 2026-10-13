@@ -1,6 +1,6 @@
 // server/utils/http.ts
 import type { H3Event } from 'h3'
-import type { z } from 'zod'
+import { z } from 'zod'
 
 /** Reads and validates a JSON body. Responds 400 with the first readable problem. */
 export async function parseBody<T extends z.ZodType>(event: H3Event, schema: T): Promise<z.infer<T>> {
@@ -24,3 +24,18 @@ export function uuidParam(event: H3Event, name: string): string {
 export function fail(statusCode: number, message: string): never {
   throw createError({ statusCode, message })
 }
+
+/**
+ * A phone number in full international form, stored as E.164 ("+2348030000001") so WhatsApp can
+ * reach it. The app's PhoneInput always sends this form; anything without a valid country code is
+ * refused with a message saying so.
+ */
+export const internationalPhone = (label: string) =>
+  z.string({ error: `Enter the ${label}.` }).trim().transform((value, ctx) => {
+    const e164 = toE164(value)
+    if (!e164) {
+      ctx.addIssue({ code: 'custom', message: `Enter a valid ${label} with its country code, e.g. +234 803 000 0001.` })
+      return z.NEVER
+    }
+    return e164
+  })

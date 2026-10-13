@@ -1,6 +1,6 @@
 <!-- app/pages/admin/restaurants/create.vue -->
 <script setup lang="ts">
-import { CURRENCY_OPTIONS } from '#shared/types/models'
+import { CURRENCY_OPTIONS, type Currency } from '#shared/types/models'
 
 definePageMeta({ layout: 'admin', middleware: 'admin-auth' })
 
@@ -18,7 +18,7 @@ function validate() {
   if (!form.name.trim()) errors.name = 'Enter the restaurant name.'
   if (!form.address.trim()) errors.address = 'Enter an address.'
   if (!form.contactPerson.trim()) errors.contactPerson = 'Enter a contact person.'
-  if (!form.contactNumber.trim()) errors.contactNumber = 'Enter a contact number.'
+  if (!toE164(form.contactNumber)) errors.contactNumber = 'Enter a valid contact number. Check the country code on the left.'
   if (!/^\S+@\S+\.\S+$/.test(form.contactEmail.trim())) errors.contactEmail = 'Enter a valid email — the invite goes here.'
   if (!form.currency) errors.currency = 'Select a currency.'
   return Object.keys(errors).length === 0
@@ -104,9 +104,9 @@ async function copyLink() {
         <BaseInput v-model="form.name" label="Restaurant name" icon="lucide:store" :error="errors.name" required />
         <BaseInput v-model="form.address" label="Address" icon="lucide:map-pin" :error="errors.address" required />
         <ImageUpload v-model="form.logo" label="Logo (optional)" />
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid gap-4 sm:grid-cols-2">
           <BaseInput v-model="form.contactPerson" label="Contact person" icon="lucide:user" :error="errors.contactPerson" required />
-          <BaseInput v-model="form.contactNumber" label="Contact number" type="tel" icon="lucide:phone" :error="errors.contactNumber" required />
+          <PhoneInput v-model="form.contactNumber" label="Contact number" :default-country="form.currency ? CURRENCY_COUNTRY[form.currency as Currency] : 'NG'" confirm-label="" :error="errors.contactNumber" required />
         </div>
         <BaseInput v-model="form.contactEmail" label="Contact email" type="email" icon="lucide:mail" hint="The invite link is sent here, and it becomes their login." :error="errors.contactEmail" required />
         <BaseSelect v-model="form.currency" label="Currency" :options="CURRENCY_OPTIONS" placeholder="Select" :error="errors.currency" required />

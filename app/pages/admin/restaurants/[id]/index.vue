@@ -104,7 +104,7 @@ function validateEdit() {
   if (!editForm.name.trim()) editErrors.name = 'Enter the restaurant name.'
   if (!editForm.address.trim()) editErrors.address = 'Enter an address.'
   if (!editForm.contactPerson.trim()) editErrors.contactPerson = 'Enter a contact person.'
-  if (!editForm.contactNumber.trim()) editErrors.contactNumber = 'Enter a contact number.'
+  if (!toE164(editForm.contactNumber)) editErrors.contactNumber = 'Enter a valid contact number. Check the country code on the left.'
   if (!editForm.currency) editErrors.currency = 'Select a currency.'
   return Object.keys(editErrors).length === 0
 }
@@ -251,9 +251,9 @@ async function saveEdit() {
         <BaseInput v-model="editForm.name" label="Restaurant name" icon="lucide:store" :error="editErrors.name" required />
         <BaseInput v-model="editForm.address" label="Address" icon="lucide:map-pin" :error="editErrors.address" required />
         <ImageUpload v-model="editForm.logo" label="Logo (optional)" />
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid gap-4 sm:grid-cols-2">
           <BaseInput v-model="editForm.contactPerson" label="Contact person" icon="lucide:user" :error="editErrors.contactPerson" required />
-          <BaseInput v-model="editForm.contactNumber" label="Contact number" type="tel" icon="lucide:phone" :error="editErrors.contactNumber" required />
+          <PhoneInput v-if="editOpen" v-model="editForm.contactNumber" label="Contact number" :default-country="editForm.currency ? CURRENCY_COUNTRY[editForm.currency] : 'NG'" confirm-label="" :error="editErrors.contactNumber" required />
         </div>
         <BaseSelect v-model="editForm.currency" label="Currency" :options="CURRENCY_OPTIONS" :error="editErrors.currency" required />
         <p v-if="editForm.currency && restaurant && editForm.currency !== restaurant.currency" class="flex items-start gap-2 rounded-control bg-warning-soft px-3.5 py-2.5 text-xs font-medium text-ink">

@@ -1,8 +1,6 @@
 // server/utils/orders.ts
 import { z } from 'zod'
 
-const phone = (label: string) =>
-  z.string({ error: `Enter a valid ${label}.` }).trim().regex(/^\+?[0-9][0-9 ()-]{6,19}$/, `Enter a valid ${label}, e.g. +2348012345678.`)
 const text = (label: string, max: number) => z.string({ error: `Enter ${label}.` }).trim().min(1, `Enter ${label}.`).max(max, `${label[0]!.toUpperCase()}${label.slice(1)} is too long.`)
 const optionalText = (max: number) => z.string().trim().max(max).optional().nullable()
 
@@ -18,8 +16,8 @@ export const placeOrderSchema = z.object({
   spiceLevel: z.enum(['spicy', 'non_spicy']).nullable(),
   drinkChoice: z.string().trim().max(40).nullable(),
   deliveryName: text('the name to deliver to', 120),
-  deliveryPhone: phone('phone number'),
-  deliveryWhatsapp: phone('WhatsApp number'),
+  deliveryPhone: internationalPhone('phone number'),
+  deliveryWhatsapp: internationalPhone('WhatsApp number'),
   houseName: text('the house or apartment name', 120),
   houseNumber: text('the house number', 20),
   floor: text('the floor', 20),

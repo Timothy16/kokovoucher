@@ -48,17 +48,14 @@ watch(
     if (delivery.whatsappSameAsPhone) delivery.whatsapp = delivery.phone
   }
 )
-const phonePattern = /^\+?[0-9][0-9 ()-]{6,19}$/
-const deliveryErrors = computed(() => {
-  const e: Record<string, string> = {}
-  if (delivery.phone.trim() && !phonePattern.test(delivery.phone.trim())) e.phone = 'Enter a valid phone number, e.g. +2348012345678.'
-  if (delivery.whatsapp.trim() && !phonePattern.test(delivery.whatsapp.trim())) e.whatsapp = 'Enter a valid WhatsApp number.'
-  return e
-})
+// Phone fields default to the restaurant's country (NGN → Nigeria, KES → Kenya). PhoneInput explains
+// any problem itself; here we only need to know both numbers are valid international numbers.
+const phoneCountry = computed(() => (item.value ? CURRENCY_COUNTRY[item.value.currency] : 'NG'))
 const deliveryValid = computed(
   () =>
-    !!(delivery.name.trim() && delivery.phone.trim() && delivery.whatsapp.trim() && delivery.houseName.trim() && delivery.houseNumber.trim() && delivery.floor.trim()) &&
-    !Object.keys(deliveryErrors.value).length
+    !!(delivery.name.trim() && delivery.houseName.trim() && delivery.houseNumber.trim() && delivery.floor.trim()) &&
+    !!toE164(delivery.phone) &&
+    !!toE164(delivery.whatsapp)
 )
 function continueDelivery() {
   // Enter in a field submits the form, so guard here rather than relying on the disabled button.
@@ -214,12 +211,12 @@ async function placeOrder() {
         <p class="mt-1 text-sm text-muted">Where should this go? Delivery is free.</p>
         <form class="mt-5 space-y-4" @submit.prevent="continueDelivery">
           <BaseInput v-model="delivery.name" label="Full name" icon="lucide:user" autocomplete="name" required />
-          <BaseInput v-model="delivery.phone" label="Phone number" type="tel" icon="lucide:phone" placeholder="+234…" autocomplete="tel" :error="deliveryErrors.phone" required />
+          <PhoneInput v-model="delivery.phone" label="Phone number" :default-country="phoneCountry" :confirm-label="delivery.whatsappSameAsPhone ? 'Updates will come on WhatsApp to' : 'The rider will call'" hint="Pick your country, then your number." required />
           <div>
-            <BaseInput v-model="delivery.whatsapp" label="WhatsApp number" type="tel" icon="lucide:message-circle" :disabled="delivery.whatsappSameAsPhone" :error="deliveryErrors.whatsapp" required />
+            <PhoneInput v-if="!delivery.whatsappSameAsPhone" v-model="delivery.whatsapp" label="WhatsApp number" :default-country="phoneCountry" confirm-label="Order updates will come on WhatsApp to" required />
             <label class="mt-1.5 flex items-center gap-2 text-xs text-muted">
               <input v-model="delivery.whatsappSameAsPhone" type="checkbox" class="rounded border-border text-primary focus:ring-primary/30" />
-              Same as phone number
+              My WhatsApp number is the same as my phone number
             </label>
           </div>
           <div class="grid grid-cols-2 gap-4">

@@ -18,7 +18,7 @@ export const restaurantProfileSchema = z.object({
   address: text('an address', 300),
   logoPath: logoPath.optional(),
   contactPerson: text('a contact person', 120),
-  contactNumber: text('a contact number', 40),
+  contactNumber: internationalPhone('contact number'),
   currency: z.enum(['NGN', 'KES', 'USD'], { error: 'Select a currency.' })
 })
 
