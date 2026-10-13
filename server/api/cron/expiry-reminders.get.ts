@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
     const email = voucherExpiringEmail({ ...v, amount: Number(v.amount) }, menuUrlFor(v.currency))
     const target = { recipientType: 'customer' as const, template: 'voucher_expiring', related: { type: 'voucher', id: v.id } }
     if (await notifyEmail({ ...target, to: v.customer_email }, email)) emailed++
-    await notifyWhatsapp({ ...target, to: v.customer_phone }, email)
+    await notifyWhatsapp({ ...target, to: v.customer_phone, currency: v.currency }, email, whatsapp.voucherExpiring({ ...v, amount: Number(v.amount) }))
   }
   return { claimed: vouchers?.length ?? 0, emailed }
 })

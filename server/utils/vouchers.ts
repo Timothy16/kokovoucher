@@ -31,11 +31,12 @@ export const voidVoucherSchema = z.object({
 
 export const menuUrlFor = (currency: string) => `${useRuntimeConfig().public.siteUrl}/menu?currency=${currency}`
 
-/** Voucher email + WhatsApp (logged as skipped) to the customer. Returns whether the email went. */
+/** Voucher email + WhatsApp to the customer. Returns whether the email went. */
 export async function sendVoucherToCustomer(v: Voucher, resent: boolean) {
   const email = voucherIssuedEmail({ ...v, amount: Number(v.amount) }, menuUrlFor(v.currency), resent)
   const target = { recipientType: 'customer' as const, template: resent ? 'voucher_resent' : 'voucher_issued', related: { type: 'voucher', id: v.id } }
   const emailed = await notifyEmail({ ...target, to: v.customer_email }, email)
-  await notifyWhatsapp({ ...target, to: v.customer_phone }, email)
+  const voucher = { ...v, amount: Number(v.amount) }
+  await notifyWhatsapp({ ...target, to: v.customer_phone, currency: v.currency }, email, whatsapp.voucherReady(voucher))
   return emailed
 }

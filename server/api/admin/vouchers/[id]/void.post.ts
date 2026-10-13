@@ -13,7 +13,8 @@ export default defineEventHandler(async (event) => {
   const email = voucherVoidedEmail({ ...voucher, amount: Number(voucher.amount) })
   const target = { recipientType: 'customer' as const, template: 'voucher_voided', related: { type: 'voucher', id } }
   await notifyEmail({ ...target, to: voucher.customer_email }, email)
-  await notifyWhatsapp({ ...target, to: voucher.customer_phone }, email)
+  // No approved WhatsApp template for a cancelled voucher: email only (logged as skipped).
+  await notifyWhatsapp({ ...target, to: voucher.customer_phone, currency: voucher.currency }, email, null)
   await audit({ actor: 'admin', actorId: admin.id, action: 'voucher.void', targetType: 'voucher', targetId: id, note: voucher.void_reason })
 
   return { ok: true }

@@ -7,6 +7,38 @@ wallet and paid out by admin.
 
 - **Product spec (source of truth):** [`mvp.md`](./mvp.md) — business rules, lifecycles, screens.
 - **This file:** how it's built, how to run it, and where each build stage stands.
+- **Picking this up?** Read [Current status](#current-status) and
+  [Working on this codebase](#working-on-this-codebase) first.
+
+---
+
+## Current status
+
+*Last updated 2026-10-13.*
+
+**Done:** the whole MVP in `mvp.md` runs on Supabase (Stages 0–7 below), plus email and WhatsApp
+through Infobip. There is no mock data left.
+
+**Environments:** one Supabase project, **demo** (`wntedncojkxjtwvcecav`, eu-west-1), used for local
+development and testing. A separate **live** project will be created only when testing is finished;
+the plan is in [Going live later](#going-live-later). There is no seed data; the only account is the
+admin (`admin@kokosend.com`).
+
+**Open items, roughly in order:**
+1. **WhatsApp end-to-end test with a real number.** Email is verified: on 2026-10-13 a voucher
+   email went through the app to a real inbox and Infobip reported it *delivered* (after the
+   Infobip trial was ended; trial accounts only deliver to whitelisted recipients). WhatsApp logic
+   is unit-tested but no real WhatsApp has been sent through the app yet.
+   Note: the notification log's *sent* means "accepted by Infobip", not "delivered" — there is no
+   delivery-report webhook yet.
+2. **Supabase password-reset email still uses Resend SMTP.** To move it to Infobip, see
+   [Supabase Auth emails](#supabase-auth-emails-password-reset).
+3. **Turn off public sign-ups** in Supabase (Authentication → Sign In / Providers). The app creates
+   every account itself, so sign-ups only let strangers create empty accounts and trigger emails.
+4. **WhatsApp templates still missing** for the walk-in receipt (rule 11) and voucher cancelled.
+   Those go by email only until new templates are approved.
+5. **Before real customers:** real Terms and Privacy text (pages are placeholders), Supabase
+   leaked-password protection, the live project, own domain.
 
 ---
 
@@ -17,8 +49,8 @@ wallet and paid out by admin.
 | App | Nuxt 4 (Vue 3), client-rendered (`ssr: false`), Tailwind |
 | Server | Nuxt server routes (`server/api/*`), deployed on **Vercel** |
 | Database / Auth / Storage | **Supabase** (Postgres + RLS, Auth, Storage, Realtime, pg_cron) |
-| Email | **Resend** (app emails from the server; Supabase Auth emails via Resend SMTP) |
-| WhatsApp | **Not integrated yet** — logged as `skipped` in the notification log (`TODO(whatsapp)`) |
+| Email | **Infobip** from `no-reply@voucher.kokosend.com` (app emails). Supabase Auth's password-reset email still goes through Resend SMTP (dashboard setting) |
+| WhatsApp | **Infobip**, using Meta-approved templates (`server/utils/whatsapp-templates.ts`) |
 
 ## How the system is put together
 
@@ -26,7 +58,7 @@ wallet and paid out by admin.
 Browser ──reads (RLS)──────────────▶ Supabase Postgres
    │
    └──writes: useApi() + JWT ──▶ /api/* (Nuxt server) ──service role──▶ Postgres functions / tables
-                                        ├─▶ Resend (email)
+                                        ├─▶ Infobip (email + WhatsApp)
                                         └─▶ audit_log + notifications
 ```
 
@@ -59,7 +91,7 @@ Browser ──reads (RLS)──────────────▶ Supabase 
 | Disputes | Open → resolved (with a note) by admin |
 | Walk-in QR scanner | Removed — codes are typed |
 | Restaurant invites | Token stored hashed, single use, expires after 7 days, resending revokes the old link |
-| Passwords | Min 8 characters; forgot-password via Supabase Auth (sent through Resend) |
+| Passwords | Min 8 characters; forgot-password via Supabase Auth (its SMTP is still Resend) |
 | Amounts | USD may have cents; NGN/KES are whole numbers (DB check constraint) |
 | Seed data | None — the database starts empty except for the admin account |
 | Brand | The product is **KokoSend** (renamed from KokoVoucher). Internal identifiers (package name, storage keys, repo folder) keep the old name |
@@ -79,7 +111,8 @@ app/
 server/
   api/                         server routes (the only writers)
   utils/                       supabase (service client, requireUser), http (parseBody, fail),
-                               notify (log + send), email (Resend + design system), email-templates,
+                               notify (log + send), email (design system), email-templates, infobip,
+                               whatsapp-templates,
                                audit, tokens, rate-limit, restaurants, combos, vouchers, orders
 shared/types/
   database.types.ts            GENERATED from the live schema — `npm run db:types`
@@ -106,7 +139,9 @@ npm run db:types    # regenerate shared/types/database.types.ts
 
 ### One-time Supabase dashboard settings
 
-- **Authentication → Emails → SMTP:** Resend (`smtp.resend.com`, port 465, user `resend`, sender `no-reply@rechargify.org`) ✅ done
+- **Authentication → Emails → SMTP:** currently Resend (`smtp.resend.com`, port 465, user `resend`,
+  sender `no-reply@rechargify.org`). To move it to Infobip, see
+  [Supabase Auth emails](#supabase-auth-emails-password-reset)
 - **Authentication → URL Configuration:** Site URL = the app URL; add
   `http://localhost:3000/restaurant/reset-password` (and the production equivalent) to **Redirect URLs**
 - **Admin account:** created via the Auth admin API with `app_metadata: { "role": "admin" }` ✅ done (`admin@kokosend.com`)
@@ -114,6 +149,97 @@ npm run db:types    # regenerate shared/types/database.types.ts
 ### Deploying (Vercel)
 
 See **[Deploying to Vercel](#deploying-to-vercel)** at the end of this file.
+
+### Supabase Auth emails (password reset)
+
+Supabase sends the restaurant password-reset email itself, using the SMTP server set in the
+dashboard (the app's own emails go through the Infobip API, not SMTP). To send it through Infobip
+too, set **Authentication → Emails → SMTP Settings**:
+
+| Field | Value |
+|---|---|
+| Host | `smtp-api.infobip.com` |
+| Port | `587` (or `465`) |
+| Username | `App` (literally the word App) |
+| Password | the Infobip API key (`NUXT_INFOBIP_API_KEY`) |
+| Sender email | `no-reply@voucher.kokosend.com` |
+| Sender name | `KokoSend` |
+
+The branded reset template (Authentication → Emails → Templates → Reset password) doesn't change.
+After switching, test with "Forgot password?" on `/restaurant/login`.
+
+### Going live later
+
+1. New Supabase project (Pro plan: free projects pause after a week of inactivity and have no
+   backups). Then `npx supabase link --project-ref <live-ref>` and `npx supabase db push` apply all
+   migrations. Link back to demo afterwards (`npm run db:link`).
+2. Redo the dashboard settings, which are not in migrations: SMTP, Site URL + redirect URL,
+   password-reset template + subject + sender name, sign-ups off, leaked-password protection.
+3. Create the live admin with the Auth admin API (`app_metadata: { "role": "admin" }`).
+4. In Vercel, give **Production** the live project's variables and **Preview** the demo's.
+5. From then on, apply every new migration to demo first, test, then to live.
+
+---
+
+## Working on this codebase
+
+### The pattern every feature follows
+
+- **Reads** happen in the browser with `useSupabase()` (RLS decides what each user sees), usually
+  inside `useAsyncData`. Pages show `LoadingState`, `ErrorState` (with retry) and `EmptyState`, and
+  work at phone width.
+- **Writes** go through a server route called with `useApi()`. A route:
+  1. checks the caller: `requireUser(event, 'admin')`, `requireRestaurant(event)` (must be active),
+     or nothing for public routes, which get `rateLimit(event, ...)` instead;
+  2. validates input with zod via `parseBody(event, schema)`;
+  3. changes data through one Postgres function (`db.rpc(...)`) or one conditional update, so the
+     rule and the change happen atomically;
+  4. sends messages with `notifyEmail` / `notifyWhatsapp` and records sensitive actions with `audit`.
+- **Errors:** throw with `fail(status, message)` (or `createError({ message })`, never
+  `statusMessage`). The client shows `apiErrorMessage(e)`. Database functions *return*
+  `{ ok: false, reason }` instead of raising when the attempt itself must be recorded (wrong
+  voucher keys); `refuse()` in `server/utils/orders.ts` maps those reasons to messages.
+
+### Recipes
+
+- **New database rule or table:** add a new file in `supabase/migrations/` (never edit an applied
+  one). Server-only functions are `security definer`, `set search_path = ''`, with
+  `revoke execute … from public, anon, authenticated` and `grant execute … to service_role`. New
+  tables get RLS enabled. Then `npm run db:push` and `npm run db:types`.
+- **New email:** add a function in `server/utils/email-templates.ts` built from the blocks in
+  `server/utils/email.ts`. It returns a subject, a log summary (no secrets) and the content.
+- **New WhatsApp message:** Meta must approve every template first. Add it to `WHATSAPP_TEMPLATES`
+  in `server/utils/whatsapp-templates.ts`, submit it from `/admin/infobip-test`, wait for approval,
+  then add a builder to `whatsapp` and pass it to `notifyWhatsapp`. Approved wording can't be edited;
+  a change means a new template name.
+- **Shared helpers:** anything in `shared/utils/` is auto-imported in both the app and the server.
+  Types and constants in `shared/types/models.ts` must be imported explicitly.
+
+### Testing
+
+There is no test suite in the repo. Each stage was verified with throwaway Node scripts run against
+a local `npm run dev` and the demo project: they created temporary admins, restaurants and vouchers
+through the real API, checked results (including 401/403s, race conditions and RLS from each role),
+then deleted everything they created. If you do the same:
+- **Email and WhatsApp are real now.** Use addresses and numbers you control; fake recipients
+  waste sends and hurt the domain's reputation.
+- **Rate limits** are per IP, so many requests from one machine get 429s. Locally the server trusts
+  the `x-real-ip` header, so give test requests different values. (Vercel sets that header itself
+  in production, so it can't be spoofed there.)
+- **Clean up** test rows afterwards: notifications, audit log, payout items, payouts, walk-ins,
+  orders, vouchers, restaurants, storage images, auth users.
+- Run `npx nuxt typecheck` (expected: 0 errors) and `npx nuxt build` before calling a change done.
+
+### Gotchas
+
+- `shared/types/database.types.ts` is generated from the live schema. Regenerate it after every
+  migration, and never edit it by hand. Views report every column as nullable (see `MenuItem` in
+  `models.ts` for how that's handled).
+- `.env` values may be wrapped in quotes. Nuxt handles that; shell scripts that read `.env` must
+  strip them.
+- Stopping `nuxt dev` from some tools leaves the Node process holding port 3000. Free the port
+  before starting it again.
+- `useMockDb` and Resend are gone. Ignore any mention of them in old commits or notes.
 
 ---
 
@@ -276,6 +402,33 @@ now runs on Supabase.
 - **Verified live:** 16 new checks + a full regression of every earlier stage (189 checks) on the
   final code
 
+### ✅ After Stage 7 — Infobip (email + WhatsApp)
+- **Email** now goes through Infobip (`no-reply@voucher.kokosend.com`) instead of Resend. Same
+  designs, preheaders, plain-text versions and Reply-To (admin email). Resend removed from the code
+- **WhatsApp** goes out through the 7 Meta-approved templates, filled with real values:
+
+  | Event | Template | Values |
+  |---|---|---|
+  | Voucher issued / resent | `kokosend_voucher_ready` | first name, amount, code, expiry date |
+  | Voucher expiring (daily job) | `kokosend_voucher_expiring` | first name, amount, code, expiry date |
+  | Order placed | `kokosend_order_placed` | first name, reference, combo, restaurant |
+  | Order accepted | `kokosend_order_preparing` | restaurant, reference |
+  | Order dispatched | `kokosend_order_on_the_way` | reference, restaurant |
+  | Order delivered | `kokosend_order_delivered` | reference, restaurant |
+  | Order rejected, or cancelled because the restaurant was disabled | `kokosend_order_rejected` | restaurant, reference, reason |
+
+  Voucher-related messages go to the voucher's phone; order messages go to the WhatsApp number
+  the customer gave at checkout. Buttons link to `https://voucher.kokosend.com/…` (fixed in the
+  approved templates, so this holds even on demo)
+- **No template yet → email only**, logged as *skipped*: walk-in receipt, voucher cancelled
+- **Phone numbers:** sent in international form. A local `0…` number gets the country code of the
+  voucher currency (NGN → 234, KES → 254); one we can't be sure of (e.g. local number on a USD
+  voucher) is logged as *failed*, never guessed
+- **Notification log:** WhatsApp rows now show *sent* (with Infobip's message id) or *failed*
+  (with Infobip's reason), like email
+- **Test page** `/admin/infobip-test` (admin only, not in the menu) stays for diagnostics: send a
+  test email / template, check template approval status
+
 ## Deploying to Vercel
 
 **1. Import the project**
@@ -292,8 +445,10 @@ now runs on Supabase.
 | `NUXT_PUBLIC_SUPABASE_ANON_KEY` | the anon key (same as `.env`) |
 | `NUXT_PUBLIC_SITE_URL` | your production URL, e.g. `https://kokosend.vercel.app` — no trailing slash |
 | `NUXT_SUPABASE_SERVICE_ROLE_KEY` | service_role key — **mark as Sensitive** |
-| `NUXT_RESEND_API_KEY` | Resend API key — **mark as Sensitive** |
-| `NUXT_EMAIL_FROM` | `KokoSend <no-reply@rechargify.org>` |
+| `NUXT_INFOBIP_API_KEY` | Infobip API key — **mark as Sensitive** |
+| `NUXT_INFOBIP_BASE_URL` | your Infobip base URL (`https://xxxxx.api.infobip.com`) |
+| `NUXT_INFOBIP_WHATSAPP_FROM` | WhatsApp sender number, digits only |
+| `NUXT_EMAIL_FROM` | `KokoSend <no-reply@voucher.kokosend.com>` |
 | `CRON_SECRET` | a new long random string (not the local one) — **mark as Sensitive** |
 
 Do **not** add `SUPABASE_ACCESS_TOKEN` or `SUPABASE_DB_PASSWORD`; they are for the CLI on your

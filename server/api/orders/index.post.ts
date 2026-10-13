@@ -58,7 +58,11 @@ export default defineEventHandler(async (event) => {
 
   const customerEmail = orderPlacedCustomerEmail(base, site)
   await notifyEmail({ recipientType: 'customer', to: o.customer_email, template: 'order_placed', related }, customerEmail)
-  await notifyWhatsapp({ recipientType: 'customer', to: input.deliveryWhatsapp, template: 'order_placed', related }, customerEmail)
+  await notifyWhatsapp(
+    { recipientType: 'customer', to: input.deliveryWhatsapp, currency: o.currency, template: 'order_placed', related },
+    customerEmail,
+    whatsapp.orderPlaced({ customerName: o.customer_name, reference: o.reference, comboName: o.combo_name, restaurantName: o.restaurant_name })
+  )
   await notifyEmail(
     { recipientType: 'restaurant', to: o.restaurant_email, template: 'order_new', related },
     orderNewRestaurantEmail({ ...base, orderId: o.order_id, deliveryName: input.deliveryName, deliveryPhone: input.deliveryPhone }, site)

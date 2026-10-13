@@ -1,9 +1,11 @@
 // server/utils/notify.ts
-// Every outbound message is written to `notifications` first (the admin Notification Log),
-// then sent, then its row is updated with the outcome. A send failure never fails the
-// business action that triggered it — admin sees it as 'failed' in the log.
+// Every outbound message (email and WhatsApp, both via Infobip) is written to `notifications`
+// first (the admin Notification Log), then sent, then its row is updated with the outcome. A send
+// failure never fails the business action that triggered it — admin sees it as 'failed' in the log.
 import type { Database } from '#shared/types/database.types'
+import type { Currency } from '#shared/types/models'
 import type { EmailTemplate } from './email-templates'
+import type { WhatsAppMessage } from './whatsapp-templates'
 
 type RecipientType = Database['public']['Enums']['notification_recipient_type']
 
@@ -56,20 +58,57 @@ export async function notifyEmail(target: Target, email: EmailTemplate): Promise
   return result.ok
 }
 
-// TODO(whatsapp): send through the WhatsApp Business API once integrated. Until then the
-// message is only logged with status 'skipped' so the flow stays visible and auditable.
-export async function notifyWhatsapp(target: Target, message: { subject: string; summary: string }): Promise<void> {
-  const { error } = await useServiceClient().from('notifications').insert({
-    channel: 'whatsapp',
+/**
+ * WhatsApp through an approved Meta template (via Infobip). Logged first like email, then sent.
+ *  - `message` null → no approved template covers this event: logged as 'skipped'.
+ *  - a number we can't turn into international form → logged as 'failed', never guessed.
+ * `currency` decides the country code for a local number (NGN → 234, KES → 254).
+ */
+export async function notifyWhatsapp(
+  target: Target & { currency: Currency },
+  log: { subject: string; summary: string },
+  message: WhatsAppMessage | null
+): Promise<boolean> {
+  const db = useServiceClient()
+  const base = {
+    channel: 'whatsapp' as const,
     recipient_type: target.recipientType,
     recipient: target.to,
     template: target.template,
-    subject: message.subject,
-    summary: message.summary,
-    status: 'skipped',
-    error: 'WhatsApp sending is not integrated yet.',
+    subject: log.subject,
+    summary: log.summary,
     related_type: target.related?.type ?? null,
     related_id: target.related?.id ?? null
-  })
+  }
+
+  if (!message) {
+    const { error } = await db.from('notifications').insert({ ...base, status: 'skipped', error: 'No approved WhatsApp template for this message; sent by email only.' })
+    if (error) console.error('[notify] could not log whatsapp', target.template, error.message)
+    return false
+  }
+
+  const to = toWhatsappNumber(target.to, target.currency)
+  if (!to) {
+    const { error } = await db.from('notifications').insert({ ...base, status: 'failed', error: `"${target.to}" is not a full international number (e.g. +2348012345678).` })
+    if (error) console.error('[notify] could not log whatsapp', target.template, error.message)
+    return false
+  }
+
+  const { data: row, error } = await db.from('notifications').insert({ ...base, recipient: `+${to}` }).select('id').single()
   if (error) console.error('[notify] could not log whatsapp', target.template, error.message)
+
+  const result = infobipOutcome(await infobipSendWhatsappTemplate(to, message.template, message.placeholders, message.buttonPath))
+  if (!result.ok) console.error('[notify] whatsapp failed', target.template, result.error)
+
+  if (row) {
+    await db
+      .from('notifications')
+      .update(
+        result.ok
+          ? { status: 'sent', provider_message_id: result.providerMessageId, sent_at: new Date().toISOString() }
+          : { status: 'failed', provider_message_id: result.providerMessageId, error: result.error }
+      )
+      .eq('id', row.id)
+  }
+  return result.ok
 }

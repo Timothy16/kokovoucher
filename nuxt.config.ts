@@ -10,8 +10,10 @@ export default defineNuxtConfig({
   // Anything outside `public` is server-only and never shipped to the browser.
   runtimeConfig: {
     supabaseServiceRoleKey: '',
-    resendApiKey: '',
-    emailFrom: 'KokoSend <no-reply@rechargify.org>',
+    emailFrom: 'KokoSend <no-reply@voucher.kokosend.com>',
+    infobipApiKey: '',
+    infobipBaseUrl: '',
+    infobipWhatsappFrom: '',
     public: {
       supabaseUrl: '',
       supabaseAnonKey: '',

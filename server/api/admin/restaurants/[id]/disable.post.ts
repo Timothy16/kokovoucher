@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
   const id = uuidParam(event, 'id')
   const db = useServiceClient()
 
-  const { data: restaurant } = await db.from('restaurants').select('name, user_id').eq('id', id).maybeSingle()
+  const { data: restaurant } = await db.from('restaurants').select('name, user_id, currency').eq('id', id).maybeSingle()
   if (!restaurant) fail(404, 'Restaurant not found.')
 
   const { data, error } = await db.rpc('disable_restaurant', { p_restaurant_id: id })
@@ -32,11 +32,19 @@ export default defineEventHandler(async (event) => {
   }
 
   const site = useRuntimeConfig().public.siteUrl
+  // WhatsApp goes to the number each customer gave at checkout.
+  const { data: whatsappNumbers } = released.length
+    ? await db.from('orders').select('id, delivery_whatsapp').in('id', released.map((o) => o.order_id))
+    : { data: [] }
   for (const order of released) {
     const target = { recipientType: 'customer' as const, template: 'order_cancelled', related: { type: 'order', id: order.order_id } }
     const email = orderNotCompletedEmail({ reference: order.reference, restaurantName: restaurant.name, voucherReleased: order.voucher_released, reason: 'restaurant_disabled' }, site)
     await notifyEmail({ ...target, to: order.customer_email }, email)
-    await notifyWhatsapp({ ...target, to: order.customer_phone }, email)
+    await notifyWhatsapp(
+      { ...target, to: whatsappNumbers?.find((w) => w.id === order.order_id)?.delivery_whatsapp ?? order.customer_phone, currency: restaurant.currency },
+      email,
+      whatsapp.orderRejected({ reference: order.reference, restaurantName: restaurant.name, reason: 'the restaurant is no longer available on KokoSend' })
+    )
   }
 
   await audit({

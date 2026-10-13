@@ -40,7 +40,17 @@ export default defineEventHandler(async (event) => {
       : orderProgressEmail({ reference: r.reference, restaurantName: restaurant.name, customerName: r.customer_name }, r.status, site)
   const target = { recipientType: 'customer' as const, template: `order_${r.status}`, related: { type: 'order', id } }
   await notifyEmail({ ...target, to: r.customer_email }, email)
-  await notifyWhatsapp({ ...target, to: r.customer_phone }, email)
+
+  // WhatsApp goes to the number the customer gave at checkout (where "order confirmed" went).
+  const { data: order } = await useServiceClient().from('orders').select('delivery_whatsapp').eq('id', id).single()
+  const info = { reference: r.reference, restaurantName: restaurant.name }
+  const message = {
+    received: () => whatsapp.orderPreparing(info),
+    dispatched: () => whatsapp.orderOnTheWay(info),
+    delivered: () => whatsapp.orderDelivered(info),
+    rejected: () => whatsapp.orderRejected({ ...info, reason: note ?? '' })
+  }[r.status]()
+  await notifyWhatsapp({ ...target, to: order?.delivery_whatsapp ?? r.customer_phone, currency: restaurant.currency }, email, message)
 
   return { status: r.status }
 })

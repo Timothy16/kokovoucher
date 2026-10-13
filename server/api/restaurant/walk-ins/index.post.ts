@@ -42,7 +42,8 @@ export default defineEventHandler(async (event) => {
   })
   const target = { recipientType: 'customer' as const, template: 'walkin_alert', related: { type: 'walk_in', id: w.walk_in_id } }
   await notifyEmail({ ...target, to: w.customer_email }, email)
-  await notifyWhatsapp({ ...target, to: w.customer_phone }, email)
+  // No approved WhatsApp template for the walk-in receipt yet: email only (logged as skipped).
+  await notifyWhatsapp({ ...target, to: w.customer_phone, currency: w.currency }, email, null)
 
   return {
     currency: w.currency,

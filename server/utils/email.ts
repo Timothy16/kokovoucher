@@ -1,10 +1,9 @@
 // server/utils/email.ts
-// Email transport (Resend) + the KokoSend email design system.
+// Email transport (Infobip) + the KokoSend email design system.
 //
 // Every email is built from the same blocks and one layout, so they all look and behave the same:
 // table-based and inline-styled (Gmail, Outlook, Apple Mail), full-width on phones, readable with
 // images off (no image assets at all), with a hidden inbox preheader and a plain-text twin.
-import { Resend } from 'resend'
 
 // ---------- design tokens (mirror the app's) ----------
 const C = {
@@ -53,33 +52,9 @@ export interface SendResult {
 }
 
 // ---------- transport ----------
-let resend: Resend | null = null
-
-function resendClient() {
-  if (!resend) {
-    const { resendApiKey } = useRuntimeConfig()
-    if (!resendApiKey) throw new Error('NUXT_RESEND_API_KEY is not set')
-    resend = new Resend(resendApiKey)
-  }
-  return resend
-}
-
 export async function sendEmail(to: string, subject: string, content: EmailContent, replyTo?: string | null): Promise<SendResult> {
-  try {
-    const { emailFrom } = useRuntimeConfig()
-    const { data, error } = await resendClient().emails.send({
-      from: emailFrom,
-      to,
-      subject,
-      html: renderEmailHtml(subject, content, !!replyTo),
-      text: renderEmailText(content, !!replyTo),
-      ...(replyTo ? { replyTo } : {})
-    })
-    if (error) return { ok: false, providerMessageId: null, error: error.message }
-    return { ok: true, providerMessageId: data?.id ?? null, error: null }
-  } catch (e) {
-    return { ok: false, providerMessageId: null, error: e instanceof Error ? e.message : 'Unknown email error' }
-  }
+  const result = await infobipSendEmail(to, subject, renderEmailText(content, !!replyTo), renderEmailHtml(subject, content, !!replyTo), replyTo)
+  return infobipOutcome(result)
 }
 
 // ---------- rendering ----------
