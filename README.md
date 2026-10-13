@@ -168,6 +168,15 @@ too, set **Authentication → Emails → SMTP Settings**:
 The branded reset template (Authentication → Emails → Templates → Reset password) doesn't change.
 After switching, test with "Forgot password?" on `/restaurant/login`.
 
+**The reset link only returns to the reset page if both of these match the real domain:**
+`NUXT_PUBLIC_SITE_URL` in Vercel (the app asks Supabase to return to
+`<NUXT_PUBLIC_SITE_URL>/restaurant/reset-password`), and that exact address under Supabase →
+Authentication → URL Configuration → **Redirect URLs**. If they don't match, Supabase falls back to
+the Site URL (home page). `app/plugins/auth-landing.client.ts` catches that case and forwards the
+link to the reset page, so users aren't stranded, but fix the settings anyway. Also consider turning
+off Infobip **click tracking** for `voucher.kokosend.com`: it rewrites every link through
+`tracking.….voucher.kokosend.com`, including reset and invite links that carry one-time secrets.
+
 ### Going live later
 
 1. New Supabase project (Pro plan: free projects pause after a week of inactivity and have no
