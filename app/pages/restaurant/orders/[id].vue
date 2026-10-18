@@ -98,7 +98,20 @@ const rejectReason = ref('')
           <div><p class="text-xs text-muted">Phone</p><a :href="`tel:${order.delivery_phone}`" class="mt-0.5 block font-semibold text-primary">{{ order.delivery_phone }}</a></div>
           <div><p class="text-xs text-muted">WhatsApp</p><p class="mt-0.5 font-semibold text-ink">{{ order.delivery_whatsapp }}</p></div>
           <div><p class="text-xs text-muted">Drop option</p><p class="mt-0.5 font-semibold text-ink">{{ DROP_OPTION_LABEL[order.drop_option] }}</p></div>
-          <div class="col-span-2"><p class="text-xs text-muted">Address</p><p class="mt-0.5 font-semibold text-ink">{{ formatOrderAddress(order) }}</p></div>
+          <div class="col-span-2">
+            <p class="text-xs text-muted">Address</p>
+            <p class="mt-0.5 font-semibold text-ink">{{ formatOrderAddress(order) }}</p>
+            <a
+              v-if="order.delivery_latitude != null && order.delivery_longitude != null"
+              :href="mapsLink(order.delivery_latitude, order.delivery_longitude)"
+              target="_blank"
+              rel="noopener"
+              class="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary"
+            >
+              <Icon name="lucide:navigation" class="size-3.5" />
+              Open in Maps
+            </a>
+          </div>
           <div v-if="order.spice_level"><p class="text-xs text-muted">Spice</p><p class="mt-0.5 font-semibold text-ink">{{ SPICE_LABEL[order.spice_level] }}</p></div>
           <div v-if="order.drink_choice"><p class="text-xs text-muted">Drink</p><p class="mt-0.5 font-semibold text-ink">{{ order.drink_choice }}</p></div>
           <div v-if="order.additional_info" class="col-span-2"><p class="text-xs text-muted">Additional info</p><p class="mt-0.5 font-semibold text-ink">{{ order.additional_info }}</p></div>

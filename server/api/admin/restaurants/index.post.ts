@@ -14,6 +14,8 @@ export default defineEventHandler(async (event) => {
     .insert({
       name: input.name,
       address: input.address,
+      latitude: input.location?.lat ?? null,
+      longitude: input.location?.lng ?? null,
       logo_path: input.logoPath ?? null,
       contact_person: input.contactPerson,
       contact_number: input.contactNumber,

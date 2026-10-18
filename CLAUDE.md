@@ -18,6 +18,8 @@ Read `README.md` first, especially **Current status**, **Working on this codebas
   summaries.
 - Phone numbers: use `PhoneInput` in the UI and `internationalPhone()` in server schemas; store
   E.164 (`+2348030000001`). Never accept a number without its country code.
+- Addresses: use `AddressInput` (MapTiler suggestions) and `geoPoint` in server schemas. A picked
+  suggestion saves a location; a typed address must still be accepted (no location).
 - User-facing name is **KokoSend** (not KokoVoucher). Money: USD may have cents; NGN/KES are whole
   numbers. Voucher expiry is defined in UTC.
 

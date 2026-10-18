@@ -1,13 +1,14 @@
 <!-- app/pages/admin/restaurants/create.vue -->
 <script setup lang="ts">
 import { CURRENCY_OPTIONS, type Currency } from '#shared/types/models'
+import type { GeoPoint } from '#shared/utils/address'
 
 definePageMeta({ layout: 'admin', middleware: 'admin-auth' })
 
 const api = useApi()
 const toast = useToast()
 
-const form = reactive({ name: '', address: '', logo: null as string | null, contactPerson: '', contactNumber: '', contactEmail: '', currency: '' })
+const form = reactive({ name: '', address: '', location: null as GeoPoint | null, logo: null as string | null, contactPerson: '', contactNumber: '', contactEmail: '', currency: '' })
 const errors = reactive<Record<string, string>>({})
 const submitting = ref(false)
 const success = ref<{ inviteUrl: string; name: string; emailed: boolean } | null>(null)
@@ -35,6 +36,7 @@ async function submit() {
       body: {
         name: form.name,
         address: form.address,
+        location: form.location,
         logoPath,
         contactPerson: form.contactPerson,
         contactNumber: form.contactNumber,
@@ -102,7 +104,7 @@ async function copyLink() {
     <BaseCard v-else class="animate-fade-up">
       <form class="space-y-4" @submit.prevent="submit">
         <BaseInput v-model="form.name" label="Restaurant name" icon="lucide:store" :error="errors.name" required />
-        <BaseInput v-model="form.address" label="Address" icon="lucide:map-pin" :error="errors.address" required />
+        <AddressInput v-model="form.address" v-model:location="form.location" label="Address" :country="form.currency ? addressCountry(form.currency as Currency) : undefined" hint="Pick it from the list so customers' addresses are suggested near the restaurant." :error="errors.address" required />
         <ImageUpload v-model="form.logo" label="Logo (optional)" />
         <div class="grid gap-4 sm:grid-cols-2">
           <BaseInput v-model="form.contactPerson" label="Contact person" icon="lucide:user" :error="errors.contactPerson" required />

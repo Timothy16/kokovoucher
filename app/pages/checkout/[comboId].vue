@@ -1,6 +1,7 @@
 <!-- app/pages/checkout/[comboId].vue -->
 <script setup lang="ts">
 import { drinkChoices } from '#shared/types/models'
+import type { GeoPoint } from '#shared/utils/address'
 
 definePageMeta({ layout: 'customer' })
 
@@ -35,6 +36,8 @@ const delivery = reactive({
   phone: '',
   whatsapp: '',
   whatsappSameAsPhone: true,
+  street: '',
+  location: null as GeoPoint | null,
   houseName: '',
   houseNumber: '',
   floor: '',
@@ -51,9 +54,13 @@ watch(
 // Phone fields default to the restaurant's country (NGN → Nigeria, KES → Kenya). PhoneInput explains
 // any problem itself; here we only need to know both numbers are valid international numbers.
 const phoneCountry = computed(() => (item.value ? CURRENCY_COUNTRY[item.value.currency] : 'NG'))
+// Address suggestions: in the restaurant's country, nearest the restaurant first (when it has a pin).
+const addressNear = computed(() =>
+  item.value?.restaurant_latitude != null && item.value.restaurant_longitude != null ? { lat: item.value.restaurant_latitude, lng: item.value.restaurant_longitude } : null
+)
 const deliveryValid = computed(
   () =>
-    !!(delivery.name.trim() && delivery.houseName.trim() && delivery.houseNumber.trim() && delivery.floor.trim()) &&
+    !!(delivery.name.trim() && delivery.street.trim() && delivery.houseName.trim() && delivery.houseNumber.trim() && delivery.floor.trim()) &&
     !!toE164(delivery.phone) &&
     !!toE164(delivery.whatsapp)
 )
@@ -87,6 +94,8 @@ async function placeOrder() {
         deliveryName: delivery.name,
         deliveryPhone: delivery.phone,
         deliveryWhatsapp: delivery.whatsapp,
+        streetAddress: delivery.street,
+        location: delivery.location,
         houseName: delivery.houseName,
         houseNumber: delivery.houseNumber,
         floor: delivery.floor,
@@ -219,11 +228,20 @@ async function placeOrder() {
               My WhatsApp number is the same as my phone number
             </label>
           </div>
-          <div class="grid grid-cols-2 gap-4">
+          <AddressInput
+            v-model="delivery.street"
+            v-model:location="delivery.location"
+            label="Street / area"
+            :country="item ? addressCountry(item.currency) : undefined"
+            :near="addressNear"
+            hint="Start typing and pick your street, estate or area from the list."
+            required
+          />
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <BaseInput v-model="delivery.houseName" label="House / apartment name" icon="lucide:home" required />
             <BaseInput v-model="delivery.houseNumber" label="House number" required />
           </div>
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <BaseInput v-model="delivery.floor" label="Floor" required />
             <BaseInput v-model="delivery.landmark" label="Nearest landmark (optional)" />
           </div>

@@ -11,6 +11,8 @@ export default defineEventHandler(async (event) => {
   const patch = {
     ...(input.name !== undefined && { name: input.name }),
     ...(input.address !== undefined && { address: input.address }),
+    // A new address always replaces the location: picked → its point, typed → none.
+    ...((input.address !== undefined || input.location !== undefined) && { latitude: input.location?.lat ?? null, longitude: input.location?.lng ?? null }),
     ...(input.logoPath !== undefined && { logo_path: input.logoPath }),
     ...(input.contactPerson !== undefined && { contact_person: input.contactPerson }),
     ...(input.contactNumber !== undefined && { contact_number: input.contactNumber }),

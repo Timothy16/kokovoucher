@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -193,6 +193,8 @@ export type Database = {
           combo_id: string
           created_at: string
           currency: Database["public"]["Enums"]["currency"]
+          delivery_latitude: number | null
+          delivery_longitude: number | null
           delivery_name: string
           delivery_phone: string
           delivery_whatsapp: string
@@ -212,6 +214,7 @@ export type Database = {
           restaurant_id: string
           spice_level: Database["public"]["Enums"]["spice_level"] | null
           status: Database["public"]["Enums"]["order_status"]
+          street_address: string | null
           updated_at: string
           voucher_id: string
         }
@@ -221,6 +224,8 @@ export type Database = {
           combo_id: string
           created_at?: string
           currency: Database["public"]["Enums"]["currency"]
+          delivery_latitude?: number | null
+          delivery_longitude?: number | null
           delivery_name: string
           delivery_phone: string
           delivery_whatsapp: string
@@ -240,6 +245,7 @@ export type Database = {
           restaurant_id: string
           spice_level?: Database["public"]["Enums"]["spice_level"] | null
           status?: Database["public"]["Enums"]["order_status"]
+          street_address?: string | null
           updated_at?: string
           voucher_id: string
         }
@@ -249,6 +255,8 @@ export type Database = {
           combo_id?: string
           created_at?: string
           currency?: Database["public"]["Enums"]["currency"]
+          delivery_latitude?: number | null
+          delivery_longitude?: number | null
           delivery_name?: string
           delivery_phone?: string
           delivery_whatsapp?: string
@@ -268,6 +276,7 @@ export type Database = {
           restaurant_id?: string
           spice_level?: Database["public"]["Enums"]["spice_level"] | null
           status?: Database["public"]["Enums"]["order_status"]
+          street_address?: string | null
           updated_at?: string
           voucher_id?: string
         }
@@ -468,7 +477,9 @@ export type Database = {
           disabled_at: string | null
           id: string
           invited_at: string
+          latitude: number | null
           logo_path: string | null
+          longitude: number | null
           name: string
           status: Database["public"]["Enums"]["restaurant_status"]
           updated_at: string
@@ -485,7 +496,9 @@ export type Database = {
           disabled_at?: string | null
           id?: string
           invited_at?: string
+          latitude?: number | null
           logo_path?: string | null
+          longitude?: number | null
           name: string
           status?: Database["public"]["Enums"]["restaurant_status"]
           updated_at?: string
@@ -502,7 +515,9 @@ export type Database = {
           disabled_at?: string | null
           id?: string
           invited_at?: string
+          latitude?: number | null
           logo_path?: string | null
+          longitude?: number | null
           name?: string
           status?: Database["public"]["Enums"]["restaurant_status"]
           updated_at?: string
@@ -727,7 +742,9 @@ export type Database = {
           name: string | null
           restaurant_address: string | null
           restaurant_id: string | null
+          restaurant_latitude: number | null
           restaurant_logo_path: string | null
+          restaurant_longitude: number | null
           restaurant_name: string | null
           short_description: string | null
           soda_options: string[] | null
@@ -878,8 +895,11 @@ export type Database = {
           p_house_name: string
           p_house_number: string
           p_landmark: string
+          p_latitude: number
+          p_longitude: number
           p_secret_key: string
           p_spice: Database["public"]["Enums"]["spice_level"]
+          p_street_address: string
         }
         Returns: Json
       }

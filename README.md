@@ -38,7 +38,8 @@ admin (`admin@kokosend.com`).
 4. **WhatsApp templates still missing** for the walk-in receipt (rule 11) and voucher cancelled.
    Those go by email only until new templates are approved.
 5. **Before real customers:** real Terms and Privacy text (pages are placeholders), Supabase
-   leaked-password protection, the live project, own domain.
+   leaked-password protection, the live project, own domain, and restrict the MapTiler key to the
+   production domain.
 
 ---
 
@@ -93,6 +94,7 @@ Browser ──reads (RLS)──────────────▶ Supabase 
 | Restaurant invites | Token stored hashed, single use, expires after 7 days, resending revokes the old link |
 | Passwords | Min 8 characters; forgot-password via Supabase Auth (its SMTP is still Resend) |
 | Amounts | USD may have cents; NGN/KES are whole numbers (DB check constraint) |
+| Addresses | MapTiler suggestions (`AddressInput`) on the checkout street / area and the restaurant address. Picked → map location saved + Open in Maps; typed → accepted without a location. Called from the browser with `NUXT_PUBLIC_MAPTILER_API_KEY` (restrict it to our domains in MapTiler) |
 | Phone numbers | Entered with a country picker (`PhoneInput`), stored in international E.164 form (`+2348030000001`), validated with libphonenumber-js in the app and on the server (`internationalPhone`) |
 | Seed data | None — the database starts empty except for the admin account |
 | Brand | The product is **KokoSend** (renamed from KokoVoucher). Internal identifiers (package name, storage keys, repo folder) keep the old name |
@@ -445,6 +447,27 @@ now runs on Supabase.
 - **Test page** `/admin/infobip-test` (admin only, not in the menu) stays for diagnostics: send a
   test email / template, check template approval status
 
+### ✅ Address suggestions (MapTiler)
+- **Database (migration 012):** `orders.street_address` (required for new orders),
+  `orders.delivery_latitude/longitude`, `restaurants.latitude/longitude` (both-or-neither and range
+  checks); `public_menu` exposes the restaurant's location; `place_order()` takes the street and
+  location (old signature dropped)
+- **`app/components/ui/AddressInput.vue`:** suggestions after 3 letters and a 300 ms pause, up to
+  5, keyboard + touch, filtered to delivery-relevant place types (no lagoons/coastlines/regions),
+  limited to a country and ranked near a point when given. `v-model` = text,
+  `v-model:location` = picked point or null. Coordinates are never displayed. Works as a plain
+  field if the key is missing or MapTiler fails
+- **Checkout:** new required "Street / area" field (country from the restaurant's currency,
+  nearest the restaurant first). **Admin restaurant create / edit:** address with suggestions;
+  a hand-typed address clears the old location
+- **Restaurant + admin order pages:** "Open in Maps" when the order has a location. The street is
+  part of the address line everywhere (tracking, order pages, order emails)
+- **Server:** `geoPoint` validator in `server/utils/http.ts`; checkout requires the street / area
+- **Test page** `/admin/maptiler-test` (admin only, not in the menu): try searches, see raw
+  responses and whether the key works from the browser
+- **Verified live:** 10 checks (pins saved / cleared correctly, typed addresses accepted, database
+  refuses half or impossible locations, checkout requires the street, tracking shows it)
+
 ## Deploying to Vercel
 
 **1. Import the project**
@@ -465,6 +488,7 @@ now runs on Supabase.
 | `NUXT_INFOBIP_BASE_URL` | your Infobip base URL (`https://xxxxx.api.infobip.com`) |
 | `NUXT_INFOBIP_WHATSAPP_FROM` | WhatsApp sender number, digits only |
 | `NUXT_EMAIL_FROM` | `KokoSend <no-reply@voucher.kokosend.com>` |
+| `NUXT_PUBLIC_MAPTILER_API_KEY` | MapTiler key (public by design; restrict it to your domains in the MapTiler dashboard) |
 | `CRON_SECRET` | a new long random string (not the local one) — **mark as Sensitive** |
 
 Do **not** add `SUPABASE_ACCESS_TOKEN` or `SUPABASE_DB_PASSWORD`; they are for the CLI on your

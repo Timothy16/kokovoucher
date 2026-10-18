@@ -23,8 +23,8 @@ export const DROP_OPTION_LABEL: Record<DropOption, string> = { door_drop: 'Door 
 export const SPICE_LABEL: Record<SpiceLevel, string> = { spicy: 'Spicy', non_spicy: 'Non-spicy' }
 
 /** Composes the structured delivery fields into one readable line. */
-export function formatOrderAddress(o: { house_name: string; house_number: string; floor: string; landmark: string | null }) {
-  const parts = [o.house_name, `House ${o.house_number}`, `Floor ${o.floor}`]
+export function formatOrderAddress(o: { street_address?: string | null; house_name: string; house_number: string; floor: string; landmark: string | null }) {
+  const parts = [o.house_name, `House ${o.house_number}`, `Floor ${o.floor}`, o.street_address ?? '']
   if (o.landmark) parts.push(`near ${o.landmark}`)
   return parts.filter(Boolean).join(', ')
 }

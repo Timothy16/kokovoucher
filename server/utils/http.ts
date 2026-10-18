@@ -39,3 +39,12 @@ export const internationalPhone = (label: string) =>
     }
     return e164
   })
+
+/** A map location picked from the address suggestions; null/absent when the address was typed. */
+export const geoPoint = z
+  .object({
+    lat: z.number().min(-90).max(90),
+    lng: z.number().min(-180).max(180)
+  })
+  .nullable()
+  .optional()

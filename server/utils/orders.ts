@@ -18,6 +18,8 @@ export const placeOrderSchema = z.object({
   deliveryName: text('the name to deliver to', 120),
   deliveryPhone: internationalPhone('phone number'),
   deliveryWhatsapp: internationalPhone('WhatsApp number'),
+  streetAddress: text('the street or area', 200),
+  location: geoPoint,
   houseName: text('the house or apartment name', 120),
   houseNumber: text('the house number', 20),
   floor: text('the floor', 20),

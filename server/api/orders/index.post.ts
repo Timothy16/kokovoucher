@@ -30,6 +30,10 @@ export default defineEventHandler(async (event) => {
     p_delivery_name: input.deliveryName,
     p_delivery_phone: input.deliveryPhone,
     p_delivery_whatsapp: input.deliveryWhatsapp,
+    p_street_address: input.streetAddress,
+    // null when the address was typed rather than picked (generated types can't express SQL NULL)
+    p_latitude: input.location?.lat as number,
+    p_longitude: input.location?.lng as number,
     p_house_name: input.houseName,
     p_house_number: input.houseNumber,
     p_floor: input.floor,
@@ -43,7 +47,7 @@ export default defineEventHandler(async (event) => {
 
   const site = siteUrl()
   const choices = [input.spiceLevel && SPICE_LABEL[input.spiceLevel], input.drinkChoice].filter(Boolean) as string[]
-  const deliverTo = formatOrderAddress({ house_name: input.houseName, house_number: input.houseNumber, floor: input.floor, landmark: input.landmark ?? null })
+  const deliverTo = formatOrderAddress({ street_address: input.streetAddress, house_name: input.houseName, house_number: input.houseNumber, floor: input.floor, landmark: input.landmark ?? null })
   const base = {
     reference: o.reference,
     comboName: o.combo_name,

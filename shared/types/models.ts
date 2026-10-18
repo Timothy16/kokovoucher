@@ -14,9 +14,11 @@ export type Combo = Tables['combos']['Row']
 type MenuRow = Database['public']['Views']['public_menu']['Row']
 /**
  * A row of the public menu (available combo of an active restaurant). Postgres reports every
- * view column as nullable, but the underlying columns are NOT NULL — only the logo is optional.
+ * view column as nullable, but the underlying columns are NOT NULL — only the logo and the
+ * restaurant's map location are optional.
  */
-export type MenuItem = { [K in keyof MenuRow]-?: K extends 'restaurant_logo_path' ? string | null : NonNullable<MenuRow[K]> }
+type OptionalMenuColumn = 'restaurant_logo_path' | 'restaurant_latitude' | 'restaurant_longitude'
+export type MenuItem = { [K in keyof MenuRow]-?: K extends OptionalMenuColumn ? MenuRow[K] : NonNullable<MenuRow[K]> }
 
 export const COMBO_CATEGORIES = ['Combos', 'Family Meals', 'Lunch Deals'] as const
 export const MAX_SODA_OPTIONS = 10

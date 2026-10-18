@@ -1,6 +1,7 @@
 <!-- app/pages/admin/restaurants/[id]/index.vue -->
 <script setup lang="ts">
 import { CURRENCY_OPTIONS, type Currency } from '#shared/types/models'
+import type { GeoPoint } from '#shared/utils/address'
 
 definePageMeta({ layout: 'admin', middleware: 'admin-auth' })
 
@@ -81,7 +82,7 @@ async function confirmToggle() {
 
 // ---------- edit ----------
 const editOpen = ref(false)
-const editForm = reactive({ name: '', address: '', logo: null as string | null, contactPerson: '', contactNumber: '', currency: '' as Currency | '' })
+const editForm = reactive({ name: '', address: '', location: null as GeoPoint | null, logo: null as string | null, contactPerson: '', contactNumber: '', currency: '' as Currency | '' })
 const editErrors = reactive<Record<string, string>>({})
 const savingEdit = ref(false)
 
@@ -90,6 +91,7 @@ function openEdit() {
   Object.assign(editForm, {
     name: restaurant.value.name,
     address: restaurant.value.address,
+    location: restaurant.value.latitude != null && restaurant.value.longitude != null ? { lat: restaurant.value.latitude, lng: restaurant.value.longitude } : null,
     logo: logoUrl.value,
     contactPerson: restaurant.value.contact_person,
     contactNumber: restaurant.value.contact_number,
@@ -121,6 +123,7 @@ async function saveEdit() {
       body: {
         name: editForm.name,
         address: editForm.address,
+        location: editForm.location,
         logoPath,
         contactPerson: editForm.contactPerson,
         contactNumber: editForm.contactNumber,
@@ -249,7 +252,7 @@ async function saveEdit() {
     <BaseModal v-model="editOpen" title="Edit restaurant">
       <form class="space-y-4" @submit.prevent="saveEdit">
         <BaseInput v-model="editForm.name" label="Restaurant name" icon="lucide:store" :error="editErrors.name" required />
-        <BaseInput v-model="editForm.address" label="Address" icon="lucide:map-pin" :error="editErrors.address" required />
+        <AddressInput v-model="editForm.address" v-model:location="editForm.location" label="Address" :country="editForm.currency ? addressCountry(editForm.currency) : undefined" :error="editErrors.address" required />
         <ImageUpload v-model="editForm.logo" label="Logo (optional)" />
         <div class="grid gap-4 sm:grid-cols-2">
           <BaseInput v-model="editForm.contactPerson" label="Contact person" icon="lucide:user" :error="editErrors.contactPerson" required />

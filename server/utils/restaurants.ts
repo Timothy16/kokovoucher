@@ -17,6 +17,8 @@ export const restaurantProfileSchema = z.object({
   name: text('the restaurant name', 120),
   address: text('an address', 300),
   logoPath: logoPath.optional(),
+  /** Set when the address was picked from the suggestions; null when it was typed. */
+  location: geoPoint,
   contactPerson: text('a contact person', 120),
   contactNumber: internationalPhone('contact number'),
   currency: z.enum(['NGN', 'KES', 'USD'], { error: 'Select a currency.' })

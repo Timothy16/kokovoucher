@@ -17,7 +17,9 @@ export default defineNuxtConfig({
     public: {
       supabaseUrl: '',
       supabaseAnonKey: '',
-      siteUrl: 'http://localhost:3000'
+      siteUrl: 'http://localhost:3000',
+      // Browser key by design: restrict it to our domains in the MapTiler dashboard.
+      maptilerApiKey: ''
     }
   },
   // Baseline security headers on every response (pages, assets and API).

@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
 
   const { data: o } = await db
     .from('orders')
-    .select('id, reference, status, amount, currency, spice_level, drink_choice, delivery_name, house_name, house_number, floor, landmark, drop_option, dispute_status, created_at, vouchers(status, secret_key_normalized), combos(name), restaurants(name)')
+    .select('id, reference, status, amount, currency, spice_level, drink_choice, delivery_name, street_address, house_name, house_number, floor, landmark, drop_option, dispute_status, created_at, vouchers(status, secret_key_normalized), combos(name), restaurants(name)')
     .eq('reference', reference.toUpperCase())
     .maybeSingle()
 
